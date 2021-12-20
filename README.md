@@ -1,10 +1,10 @@
 # home-media-server
 
 
-## `k3s:`
+## `k3s`
 media-server on top of a light-weight Kubernetes.
 
-## `Docker:`
+## `Docker`
 media-server on a simple container setup.
 
 
