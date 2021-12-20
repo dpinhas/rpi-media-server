@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: transmission
+  labels:
+    app: transmission
+  namespace: media
+spec:
+  selector:
+    app: transmission
+  ports:
+    - name: 'web'
+      port: 9091
+      nodePort: 30002
+      protocol: TCP
+    - name: 'outside'
+      port: 51413
+      nodePort: 31413
+      protocol: TCP
+  type: LoadBalancer 
