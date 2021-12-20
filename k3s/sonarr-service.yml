@@ -10,7 +10,6 @@ spec:
     app: sonarr
   ports:
     - port: 8989
-      nodePort: 30000
       protocol: TCP
       name: web
   type: LoadBalancer 
