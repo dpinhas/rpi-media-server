@@ -1,4 +1,4 @@
-# home-media-server
+# Raspberry-Pi Media Server
 
 
 ## `kubernetes`
@@ -13,8 +13,7 @@ Includes the following pods:
 - Plex
 
 ## `Docker`
-Media server on a simple container setup.
-With an internal name-server and reverse proxy for easy access via sub-domains.
+Media server on a simple & single host. Designed to run on Raspberry Pi.
 
 
 Includes the following applications:
@@ -24,5 +23,3 @@ Includes the following applications:
 - Transmission
 - Plex
 - Traefik
-- Portainer
-- dnsmasq
