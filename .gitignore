@@ -1,1 +1,3 @@
 data/*
+monitoring/config/prometheus/data/*
+monitoring/config/grafana/*
