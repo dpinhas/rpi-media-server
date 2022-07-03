@@ -28,6 +28,8 @@ spec:
         - name: bazarr-movies
           persistentVolumeClaim:
             claimName: bazarr-pvc-movies
+      nodeSelector:
+        dedicated: master
       containers:
         - name: bazarr
           image: 'linuxserver/bazarr:latest'
