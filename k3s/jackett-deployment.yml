@@ -25,9 +25,11 @@ spec:
         - name: jackett-downloads
           persistentVolumeClaim:
             claimName: jackett-pvc-downloads
+      nodeSelector:
+        dedicated: master
       containers:
         - name: jackett
-          image: 'ghcr.io/linuxserver/jackett:latest'
+          image: 'ghcr.io/linuxserver/jackett'
           imagePullPolicy: Always
           ports:
             - name: web
@@ -47,9 +49,4 @@ spec:
             name: jackett-config
           - mountPath: /downloads
             name: jackett-downloads
-          livenessProbe:
-            tcpSocket:
-              port: 9117
-            initialDelaySeconds: 60
-            periodSeconds: 5
       restartPolicy: Always

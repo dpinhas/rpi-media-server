@@ -28,10 +28,22 @@ spec:
         - name: plex-movies
           persistentVolumeClaim:
             claimName: plex-pvc-movies
+      nodeSelector:
+        dedicated: master
       containers:
         - name: plex
-          image: 'ghcr.io/linuxserver/plex:1.25.0'
+          #image: 'ghcr.io/linuxserver/plex:latest'
+          #image: 'plexinc/pms-docker:1.25.2.5319-c43dc0277'
+          #image: 'linuxserver/plex:1.25.2.5319-c43dc0277-ls93'
+          image: 'linuxserver/plex:latest'
           imagePullPolicy: Always
+          #resources:
+          #  requests:
+          #    memory: "254Mi"
+          #    cpu: "400m"
+          #  limits:
+          #    memory: "1024Mi"
+          #    cpu: "1000m"
           ports:
             - containerPort: 32400
               name: pms-web
@@ -72,6 +84,8 @@ spec:
               value: '1000'
             - name: VERSION
               value: docker
+            - name: ALLOWED_NETWORKS
+              value: 192.168.31.0/24, 10.43.0.0/16, 0.0.0.0/0
           volumeMounts:
           - mountPath: /config
             name: plex-config
@@ -79,9 +93,4 @@ spec:
             name: plex-tv
           - mountPath: /movies
             name: plex-movies
-          livenessProbe:
-            tcpSocket:
-              port: 32400
-            initialDelaySeconds: 30
-            periodSeconds: 5
       restartPolicy: Always

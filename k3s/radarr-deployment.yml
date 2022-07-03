@@ -28,6 +28,8 @@ spec:
         - name: radarr-downloads
           persistentVolumeClaim:
             claimName: radarr-pvc-downloads
+      nodeSelector:
+        dedicated: master
       containers:
         - name: radarr
           image: 'ghcr.io/linuxserver/radarr:latest'

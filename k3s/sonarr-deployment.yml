@@ -28,6 +28,8 @@ spec:
         - name: sonarr-downloads
           persistentVolumeClaim:
             claimName: sonarr-pvc-downloads
+      nodeSelector:
+        dedicated: master
       containers:
         - name: sonarr
           image: 'linuxserver/sonarr:latest'
@@ -48,13 +50,12 @@ spec:
             name: sonarr-config
           - mountPath: /tv
             name: sonarr-tv
-          - mountPath: /downloads
+          - mountPath: /downloads/complete
             name: sonarr-downloads
           livenessProbe:
             failureThreshold: 5
             initialDelaySeconds: 20
             periodSeconds: 5
-            httpGet:
-              host: localhost
+            tcpSocket:
               port: 8989
       restartPolicy: Always

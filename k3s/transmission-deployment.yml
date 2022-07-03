@@ -28,10 +28,19 @@ spec:
         - name: transmission-downloads
           persistentVolumeClaim:
             claimName: transmission-pvc-downloads
+      nodeSelector:
+        dedicated: master
       containers:
         - name: transmission
-          image: 'ghcr.io/linuxserver/transmission:latest'
+          image: 'ghcr.io/linuxserver/transmission:version-3.00-r2'
           imagePullPolicy: Always
+          resources:
+            requests:
+              memory: "100Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
           ports:
             - name: 'web'
               containerPort: 9091
@@ -57,7 +66,6 @@ spec:
             failureThreshold: 5
             initialDelaySeconds: 20
             periodSeconds: 5
-            httpGet:
-              host: localhost
+            tcpSocket:
               port: 9091
       restartPolicy: Always
