@@ -3,7 +3,7 @@ version: "3.8"
 
 services:
   plex:
-    image: ghcr.io/linuxserver/plex:1.25.0
+    image: ghcr.io/linuxserver/plex:latest
     container_name: plex
     environment:
       - PUID=1000
@@ -25,19 +25,18 @@ services:
       - ${DATA_PATH}/library/tv:/tv
       - ${DATA_PATH}/library/movies:/movies
     restart: unless-stopped
-    healthcheck:
-      test: curl -f http://localhost:32400/web/index.html
-      interval: 10s
-      timeout: 5s
-      retries: 5
+#    healthcheck:
+#      test: curl -f http://localhost:32400/web/index.html
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.plex.rule=Host(`plex.home.arpa`)"
+      - "traefik.http.routers.plex.rule=Host(`plex-hmc.duckdns.org`)"
       - "traefik.http.routers.plex.entrypoints=web"
       - "traefik.http.services.plex.loadbalancer.server.port=32400"
 
   sonarr:
-    #image: hub.docker.com/r/linuxserver/sonarr:latest
     image: linuxserver/sonarr:latest
     container_name: sonarr
     environment:
@@ -61,7 +60,7 @@ services:
       retries: 5
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.sonarr.rule=Host(`sonarr.home.arpa`)"
+      - "traefik.http.routers.sonarr.rule=Host(`sonarr-hmc.duckdns.org`)"
       - "traefik.http.routers.sonarr.entrypoints=web"
       - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
 
@@ -89,7 +88,7 @@ services:
       retries: 5
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.radarr.rule=Host(`radarr.home.arpa`)"
+      - "traefik.http.routers.radarr.rule=Host(`radarr-hmc.duckdns.org`)"
       - "traefik.http.routers.radarr.entrypoints=web"
       - "traefik.http.services.radarr.loadbalancer.server.port=7878"
 
@@ -114,7 +113,7 @@ services:
       retries: 5
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.jackett.rule=Host(`index.home.arpa`)"
+      - "traefik.http.routers.jackett.rule=Host(`jackett-hmc.duckdns.org`)"
       - "traefik.http.routers.jackett.entrypoints=web"
 
   transmission:
@@ -140,7 +139,7 @@ services:
       retries: 5
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.transmission.rule=Host(`download.home.arpa`)"
+      - "traefik.http.routers.transmission.rule=Host(`transmission-hmc.duckdns.org`)"
       - "traefik.http.routers.transmission.entrypoints=web"
       - "traefik.http.services.transmission.loadbalancer.server.port=9091"
 
@@ -154,59 +153,4 @@ services:
       - "80:80"
       - "8080:8080"
       - "443:443"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`proxy.home.arpa`)"
-      - "traefik.http.routers.traefik.entrypoints=web"
-      - "traefik.http.services.traefik.loadbalancer.server.port=8080"
 
-  portainer:
-    image: portainer/portainer-ce
-    container_name: portainer
-    command: -H unix:///var/run/docker.sock
-    restart: always
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - portainer_data:/data
-    ports:
-      - 8000:8000
-      - 9000:9000
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.portainer.rule=Host(`docker.home.arpa`)"
-      - "traefik.http.routers.portainer.entrypoints=web"
-      - "traefik.http.services.portainer.loadbalancer.server.port=9000"
-
-  agent:
-    image: portainer/agent:latest
-    container_name: portainer_agent
-    restart: always
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /var/lib/docker/volumes:/var/lib/dockers/volumes
-    ports:
-      - 9001:9001
-
-  dnsmasq:
-    image: micedwards/dnsmasq-gui:arm7
-    container_name: 'dnsmasq'
-    ports:
-      - "53:53/tcp"
-      - "53:53/udp"
-      - "5380:8080/tcp"
-    restart: always
-    environment:
-      - HTTP_USER=admin
-      - HTTP_PASS=admin
-    cap_add:
-      - NET_ADMIN
-    volumes:
-      - ${DATA_PATH}/config/dnsmasq/dnsmasq.conf:/etc/dnsmasq.conf
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.dnsmasq.rule=Host(`ns.home.arpa`)"
-      - "traefik.http.routers.dnsmasq.entrypoints=web"
-      - "traefik.http.services.dnsmasq.loadbalancer.server.port=5380"
-
-volumes:
-        portainer_data:
