@@ -15,4 +15,4 @@ done
 now=$(date '+%Y%m%d')
 result=$(( ($(date --date="$now" +%s) - $(date --date="$last_upgrade" +%s) )/(60*60*24) ))
 
-echo node_apt_last_upgrade  $result
+echo node_apt_last_upgrade  $result > /home/pi/rpi-media-server/monitoring/config/custom_metrics/last_update_$(hostname).prom
