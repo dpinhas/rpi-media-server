@@ -1,0 +1,135 @@
+---
+- name: Prepare Raspberry-Pi box
+  hosts: rpi
+  become: True
+  remote_user: pi
+
+  vars:
+    pi_locale: "en_US.UTF-8"
+    DATA_PATH: "/mnt/data"
+    DUCKDNS_DOMAIN: "dpinhas.duckdns.org"
+
+  tasks:
+    - name: Update repos and upgrade all packages
+      apt:
+        upgrade: 'yes'
+        update_cache: 'yes'
+        force_apt_get: true
+        cache_valid_time: 3600
+
+    - name: Change hostname
+      shell: raspi-config nonint do_hostname {{ ansible_hostname }}
+
+    - name: Update Pi's locale
+      shell: raspi-config nonint do_change_locale {{ pi_locale }}
+      
+    - name: Install deb packages
+      apt:
+        name:
+          - vim
+          - git
+          - libffi-dev
+          - libssl-dev
+          - python3-dev
+          - python3
+          - python3-pip
+          - nfs-common
+        state: latest
+
+    - name: Customize .bashrc
+      lineinfile:
+        path: /home/pi/.bashrc
+        line: "alias ll='ls -lh --color --group-directories-first'"
+        create: yes
+        owner: pi
+
+    - name: Customize .vimrc file
+      blockinfile:
+        path: /home/pi/.vimrc
+        marker: "\" {mark} ANSIBLE MANAGED"
+        block: |
+          set mouse-=a
+          syntax on
+          set clipboard=unnamed
+          set backspace=indent,eol,start
+
+          set termguicolors
+          set ignorecase
+
+          autocmd FileType yaml setlocal ai ts=2 sw=2 et
+          set tabstop=8 shiftwidth=8 expandtab
+        create: yes
+        owner: pi
+
+    - name: Configure .gitconfig file
+      blockinfile:
+        path: /home/pi/.gitconfig
+        marker: "# {mark} ANSIBLE MANAGED"
+        block: |
+          [user]
+          email = dor.pinhas1@gmail.com
+          name = Dor Pinhas
+        create: yes
+        owner: pi
+
+    - name: Configure .ssh/config file
+      blockinfile:
+        path: /home/pi/.ssh/config
+        marker: "# {mark} ANSIBLE MANAGED"
+        block: |
+          Host *
+            StrictHostKeyChecking no
+            UserKnownHostsFile=/dev/null
+            IdentityFile ~/.ssh/id_rsa
+        create: yes
+        owner: pi
+
+    - name: Reboot
+      shell: "sleep 2 && reboot"
+      async: 1
+      poll: 0
+      ignore_errors: true
+
+    - name: Wait for it to go down
+      become: no
+      command: ping -c1 {{ ansible_ssh_host }}
+      register: node_down
+      until: node_down.rc != 0
+      retries: 10
+      delay: 3
+      ignore_errors: true
+      delegate_to: localhost
+
+    - name: Wait for SSH
+      become: no
+      wait_for:
+        port: 22
+        host: "{{ ansible_ssh_host }}"
+        search_regex: OpenSSH
+        timeout: 30
+        delay: 15
+      register: machine_ssh_reachable
+      delegate_to: localhost
+      retries: 20
+      until: machine_ssh_reachable is succeeded
+
+    - name: Connect to the rebooted Pi and run setup to ensure Pi is running
+      setup:
+
+    - name: Create /mnt/data directory
+      file:
+        path: "{{ DATA_PATH }}"
+        state: directory
+
+    - name: Mount remote storage
+      mount:
+        path: "{{ DATA_PATH }}"
+        src: "{{ DUCKDNS_DOMAIN }}:{{ DATA_PATH }}"
+        fstype: "nfs"
+        opts: "defaults"
+        state: "mounted"
+      when: inventory_hostname not in groups['storage_server']
+
+    - include_tasks: configure_the_storage.yaml
+      when: inventory_hostname in groups['storage_server']
+

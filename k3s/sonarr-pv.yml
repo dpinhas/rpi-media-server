@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: sonarr-pv-config
+  namespace: media
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: "/mnt/data/config/sonarr"
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: sonarr-pv-downloads
+  namespace: media
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 500Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: "/mnt/data/downloads/complete"
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: sonarr-pv-tv
+  namespace: media
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: "/mnt/data/library/tv"

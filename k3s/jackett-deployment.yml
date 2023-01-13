@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jackett-deployment
+  labels:
+    app: jackett
+    namespace: media
+spec:
+  replicas: 1
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      app: jackett
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: jackett
+    spec:
+      volumes:
+        - name: jackett-config
+          persistentVolumeClaim:
+            claimName: jackett-pvc-config
+        - name: jackett-downloads
+          persistentVolumeClaim:
+            claimName: jackett-pvc-downloads
+      nodeSelector:
+        dedicated: master
+      containers:
+        - name: jackett
+          image: 'ghcr.io/linuxserver/jackett'
+          imagePullPolicy: Always
+          ports:
+            - name: web
+              containerPort: 9117
+              protocol: TCP
+          env:
+            - name: TZ
+              value: Asia/Jerusalem
+            - name: PGID
+              value: '1000'
+            - name: PUID
+              value: '1000'
+            - name: 'AUTO_UPDATE'
+              value: 'true'
+          volumeMounts:
+          - mountPath: /config
+            name: jackett-config
+          - mountPath: /downloads
+            name: jackett-downloads
+      restartPolicy: Always

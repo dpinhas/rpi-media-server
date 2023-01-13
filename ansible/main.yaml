@@ -1,0 +1,6 @@
+---
+- import_playbook: prepare_the_pi.yaml
+  when: setup_pi is defined and setup_pi|default(false)|bool == true
+
+- import_playbook: install_and_deploy.yaml
+  when: deploy|bool == true

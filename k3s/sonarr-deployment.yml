@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonarr-deployment
+  labels:
+    app: sonarr
+    namespace: media
+spec:
+  replicas: 1
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      app: sonarr
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: sonarr
+    spec:
+      volumes:
+        - name: sonarr-config
+          persistentVolumeClaim:
+            claimName: sonarr-pvc-config
+        - name: sonarr-tv
+          persistentVolumeClaim:
+            claimName: sonarr-pvc-tv
+        - name: sonarr-downloads
+          persistentVolumeClaim:
+            claimName: sonarr-pvc-downloads
+      nodeSelector:
+        dedicated: master
+      containers:
+        - name: sonarr
+          image: 'linuxserver/sonarr:latest'
+          imagePullPolicy: Always
+          ports:
+            - name: web
+              containerPort: 8989
+              protocol: TCP
+          env:
+            - name: TZ
+              value: Asia/Jerusalem
+            - name: PGID
+              value: '1000'
+            - name: PUID
+              value: '1000'
+          volumeMounts:
+          - mountPath: /config
+            name: sonarr-config
+          - mountPath: /tv
+            name: sonarr-tv
+          - mountPath: /downloads/complete
+            name: sonarr-downloads
+          livenessProbe:
+            failureThreshold: 5
+            initialDelaySeconds: 20
+            periodSeconds: 5
+            tcpSocket:
+              port: 8989
+      restartPolicy: Always

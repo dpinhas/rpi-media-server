@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bazarr-deployment
+  labels:
+    app: bazarr
+    namespace: media
+spec:
+  replicas: 1
+  revisionHistoryLimit: 0
+  selector:
+    matchLabels:
+      app: bazarr
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: bazarr
+    spec:
+      volumes:
+        - name: bazarr-config
+          persistentVolumeClaim:
+            claimName: bazarr-pvc-config
+        - name: bazarr-tv
+          persistentVolumeClaim:
+            claimName: bazarr-pvc-tv
+        - name: bazarr-movies
+          persistentVolumeClaim:
+            claimName: bazarr-pvc-movies
+      nodeSelector:
+        dedicated: master
+      containers:
+        - name: bazarr
+          image: 'linuxserver/bazarr:latest'
+          imagePullPolicy: Always
+          ports:
+            - name: bazarr-web
+              containerPort: 6767
+              protocol: TCP
+          env:
+            - name: TZ
+              value: Asia/Jerusalem
+            - name: PGID
+              value: '1000'
+            - name: PUID
+              value: '1000'
+          volumeMounts:
+          - mountPath: /config
+            name: bazarr-config
+          - mountPath: /tv
+            name: bazarr-tv
+          - mountPath: /movies
+            name: bazarr-movies
+          livenessProbe:
+            failureThreshold: 5
+            initialDelaySeconds: 20
+            periodSeconds: 5
+            tcpSocket:
+              port: 6767
+      restartPolicy: Always

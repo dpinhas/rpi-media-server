@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: transmission-pv-config
+  namespace: media
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 400Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: "/mnt/data/config/transmission"
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: transmission-pv-downloads
+  namespace: media
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 400Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: "/mnt/data/downloads"
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: transmission-pv-watch
+  namespace: media
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 400Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: "/mnt/data/watch"
