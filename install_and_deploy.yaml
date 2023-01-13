@@ -1,0 +1,74 @@
+---
+- name: Deploy Docker Containers
+  hosts: rpi
+  remote_user: pi
+
+  environment:
+    - PATH: "/home/pi/.local/bin:{{ ansible_env.PATH }}"
+
+  tasks:
+    - name: Get Docker convenience script
+      get_url:
+        url: https://get.docker.com
+        dest: ~/get-docker.sh
+        mode: 0755
+
+    - name: Check if Docker already installed
+      command: dpkg-query -l docker
+      register: package_check
+      ignore_errors: true
+
+    - name: Install docker
+      shell: sh /home/pi/get-docker.sh
+      when: package_check.rc == 1
+
+    - name: Adding user pi to docker group
+      user: name=pi
+            groups=docker
+            append=yes
+      become: True
+
+    - name: Install pip packages
+      pip:
+        executable: pip3
+        name: "{{ item }}"
+      loop:
+        - "docker-compose"
+        - "ansible"
+        - "docker"
+      become: True
+
+    - name: Clone github repository
+      git:
+        repo: git@github.com:dpinhas/rpi-media-server.git
+        dest: /home/pi/rpi-media-server
+        clone: yes
+
+    - name: Add DATA_PATH var to bashrc
+      lineinfile:
+        path: /home/pi/.bashrc
+        line: "export DATA_PATH='/mnt/data/'"
+
+    - name: Deploy cronjob
+      copy:
+        src: '../scripts/update_ddns_records'
+        dest: '/etc/cron.hourly'
+        mode: '0755'
+      become: true
+      when: inventory_hostname == 'pi0'
+
+    - name: Deploy containers and services
+      shell:
+        cmd: "docker-compose up -d"
+        chdir: /home/pi/rpi-media-server/docker
+      register: output
+      when: inventory_hostname == 'pi0'
+
+    - name: Deploy containers and services
+      shell:
+        cmd: "docker-compose up -d"
+        chdir: /home/pi/rpi-media-server/monitoring
+      register: output
+      when: inventory_hostname == 'pi1'
+
+    - debug: var=output
