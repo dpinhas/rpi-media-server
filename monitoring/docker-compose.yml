@@ -1,0 +1,89 @@
+---
+version: '3.8'
+
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    user: "1000:1000"
+    container_name: prometheus
+    restart: unless-stopped
+    volumes:
+      - ${PWD}/config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ${DATA_PATH}/config/prometheus/data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=10d'
+      - '--web.enable-admin-api'
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:latest
+    user: "1000:1000"
+    container_name: grafana
+    restart: unless-stopped
+    links:
+      - prometheus:prometheus
+    volumes:
+      - ${DATA_PATH}/config/grafana:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+
+  blackbox:
+    image: prom/blackbox-exporter:latest
+    container_name: blackbox
+    ports:
+      - "9115:9115"
+    restart: always
+    volumes:
+      - ${PWD}/config/blackbox.yml:/config/blackbox.yml
+    sysctls:
+      net.ipv4.ping_group_range: "0 2147483647"
+    command:
+      - '--config.file=/config/blackbox.yml'
+
+  homebridge:
+    image: oznu/homebridge:ubuntu
+    network_mode: host
+    container_name: homebridge
+    restart: always
+    environment:
+      - HOMEBRIDGE_CONFIG_UI_PORT=8581
+    volumes:
+      - ${DATA_PATH}/config/homebridge:/homebridge
+
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - /mnt/data:/mnt/data:ro
+      - ${PWD}/config/custom_metrics/:/custom_metrics
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.textfile.directory=/custom_metrics/'
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+
+  cadvisor:
+    image: zcube/cadvisor:latest # switched image
+    container_name: cadvisor
+    command:
+      - "--docker_only=true"
+      - "--housekeeping_interval=30s"
+      - "--disable_metrics=accelerator,cpu_topology,disk,memory_numa,tcp,udp,percpu,sched,process,hugetlb,referenced_memory,resctrl,cpuset,advtcp,memory_numa"
+    restart: unless-stopped
+    volumes:
+      - /:/rootfs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    ports:
+      - "8081:8080"
