@@ -49,6 +49,14 @@
         path: /home/pi/.bashrc
         line: "export DATA_PATH='/mnt/data/'"
 
+    - name: Deploy cronjob
+      copy:
+        src: '../scripts/update_ddns_records'
+        dest: '/etc/cron.hourly'
+        mode: '0755'
+      become: true
+      when: inventory_hostname == 'pi0'
+
     - name: Deploy containers and services
       shell:
         cmd: "docker-compose up -d"
