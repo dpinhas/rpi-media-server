@@ -2,3 +2,4 @@ grafana/
 data/
 ddns.log
 last_update.prom
+monitoring/config/custom_metrics/*
