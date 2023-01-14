@@ -43,6 +43,7 @@
         repo: git@github.com:dpinhas/rpi-media-server.git
         dest: /home/pi/rpi-media-server
         clone: yes
+        update: yes
 
     - name: Add DATA_PATH var to bashrc
       lineinfile:
