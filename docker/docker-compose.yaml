@@ -241,3 +241,24 @@ services:
       - "traefik.http.services.jellyfin-ext.loadbalancer.server.port=8096"
       - "traefik.http.routers.jellyfin-ext.tls.certresolver=myresolver"
 
+  adguardhome:
+    image: adguard/adguardhome
+    container_name: adguardhome
+    volumes:
+      - ${DATA_PATH}/config/adguard_home/workdir:/opt/adguardhome/work
+      - ${DATA_PATH}/config/adguard_home/confdir:/opt/adguardhome/conf
+    ports:
+      - 3000:3000/tcp
+      - 53:53/tcp
+      - 53:53/udp
+      - 8082:80/tcp
+      - 8443:443/tcp
+      - 443:443/udp
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.adguard.service=adguard"
+      - "traefik.http.routers.adguard.rule=Host(`adguard.dpinhas.duckdns.org`)"
+      - "traefik.http.routers.adguard.entrypoints=web-secure"
+      - "traefik.http.services.adguard.loadbalancer.server.port=8082"
+      - "traefik.http.routers.adguard.tls.certresolver=myresolver"
