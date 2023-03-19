@@ -130,12 +130,13 @@
         state: "mounted"
       when: inventory_hostname not in groups['storage_server']
 
-    - name: Copy apt_last_upgrade script into cron.hourly
-      copy:
-        src: '../scripts/apt_last_upgrade'
-        dest: '/etc/cron.hourly'
-        mode: '0755'
-      become: true
+    - name: Create cronjobs from scripts in rpi-media-server/scripts/
+      cron:
+        name: "{{ item}}"
+        job: "/home/pi/rpi-media-server/scripts/{{ item }}"
+        state: present
+      with_fileglob:
+        - "../scripts/*"
 
     - include_tasks: configure_the_storage.yaml
       when: inventory_hostname in groups['storage_server']
