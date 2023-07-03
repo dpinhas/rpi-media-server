@@ -106,6 +106,6 @@
   with_fileglob:
     - "../scripts/*"
 
-- include_tasks: configure_nfs.yaml
+- name: Include Storage Server Configurations
+  ansible.builtin.include_tasks: configure_nfs.yaml
   when: inventory_hostname in groups['storage_server']
-
