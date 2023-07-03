@@ -73,38 +73,16 @@
     create: yes
     owner: pi
 
-- name: Reboot
-  ansible.builtin.shell: "sleep 2 && reboot"
-  async: 1
-  poll: 0
-  ignore_errors: true
+- name: Reboot the machine (Wait for 2 minutes)
+  ansible.builtin.reboot:
+    reboot_timeout: 120
 
-- name: Wait for it to go down
-  ansible.builtin.wait_for:
-    port: 22
-    host: "{{ ansible_ssh_host }}"
-    delay: 3
-    timeout: 30
-    search_regex: OpenSSH
-  register: node_down
-  until: node_down.is_failed
-  retries: 10
-  delegate_to: localhost
+- name: Check the Uptime of the servers
+  ansible.builtin.command: "uptime"
+  register: Uptime
 
-- name: Wait for SSH
-  ansible.builtin.wait_for:
-    port: 22
-    host: "{{ ansible_ssh_host }}"
-    delay: 15
-    timeout: 30
-    search_regex: OpenSSH
-  register: machine_ssh_reachable
-  until: machine_ssh_reachable is succeeded
-  delegate_to: localhost
-  retries: 20
-
-- name: Connect to the rebooted Pi and run setup to ensure Pi is running
-  ansible.builtin.setup:
+- ansible.builtin.debug:
+    var: Uptime
 
 - name: Create /mnt/data directory
   ansible.builtin.file:
