@@ -1,0 +1,133 @@
+---
+- name: Update repos and upgrade all packages
+  ansible.builtin.apt:
+    upgrade: yes
+    update_cache: yes
+    force_apt_get: true
+    cache_valid_time: 3600
+
+- name: Change hostname
+  ansible.builtin.shell: raspi-config nonint do_hostname {{ ansible_hostname }}
+
+- name: Update Pi's locale
+  ansible.builtin.shell: raspi-config nonint do_change_locale {{ pi_locale }}
+
+- name: Install deb packages
+  ansible.builtin.apt:
+    name:
+      - vim
+      - git
+      - libffi-dev
+      - libssl-dev
+      - python3-dev
+      - python3
+      - python3-pip
+      - nfs-common
+    state: latest
+
+- name: Customize .bashrc
+  ansible.builtin.lineinfile:
+    path: /home/pi/.bashrc
+    line: "alias ll='ls -lh --color --group-directories-first'"
+    create: yes
+    owner: pi
+
+- name: Customize .vimrc file
+  ansible.builtin.blockinfile:
+    path: /home/pi/.vimrc
+    marker: "\" {mark} ANSIBLE MANAGED"
+    block: |
+      set mouse-=a
+      syntax on
+      set clipboard=unnamed
+      set backspace=indent,eol,start
+
+      set termguicolors
+      set ignorecase
+
+      autocmd FileType yaml setlocal ai ts=2 sw=2 et
+      set tabstop=8 shiftwidth=8 expandtab
+    create: yes
+    owner: pi
+
+- name: Configure .gitconfig file
+  ansible.builtin.blockinfile:
+    path: /home/pi/.gitconfig
+    marker: "# {mark} ANSIBLE MANAGED"
+    block: |
+      [user]
+      email = dor.pinhas1@gmail.com
+      name = Dor Pinhas
+    create: yes
+    owner: pi
+
+- name: Configure .ssh/config file
+  ansible.builtin.blockinfile:
+    path: /home/pi/.ssh/config
+    marker: "# {mark} ANSIBLE MANAGED"
+    block: |
+      Host *
+        StrictHostKeyChecking no
+        UserKnownHostsFile=/dev/null
+        IdentityFile ~/.ssh/id_rsa
+    create: yes
+    owner: pi
+
+- name: Reboot
+  ansible.builtin.shell: "sleep 2 && reboot"
+  async: 1
+  poll: 0
+  ignore_errors: true
+
+- name: Wait for it to go down
+  ansible.builtin.wait_for:
+    port: 22
+    host: "{{ ansible_ssh_host }}"
+    delay: 3
+    timeout: 30
+    search_regex: OpenSSH
+  register: node_down
+  until: node_down.is_failed
+  retries: 10
+  delegate_to: localhost
+
+- name: Wait for SSH
+  ansible.builtin.wait_for:
+    port: 22
+    host: "{{ ansible_ssh_host }}"
+    delay: 15
+    timeout: 30
+    search_regex: OpenSSH
+  register: machine_ssh_reachable
+  until: machine_ssh_reachable is succeeded
+  delegate_to: localhost
+  retries: 20
+
+- name: Connect to the rebooted Pi and run setup to ensure Pi is running
+  ansible.builtin.setup:
+
+- name: Create /mnt/data directory
+  ansible.builtin.file:
+    path: "{{ data_path }}"
+    state: directory
+
+- name: Mount remote storage
+  ansible.posix.mount:
+    path: "{{ data_path }}"
+    src: "{{ duckdns_domain }}:{{ data_path }}"
+    fstype: nfs
+    opts: defaults
+    state: mounted
+  when: inventory_hostname not in groups['storage_server']
+
+- name: Create cronjobs from scripts in rpi-media-server/scripts/
+  ansible.builtin.cron:
+    name: "{{ item }}"
+    job: "/home/pi/rpi-media-server/scripts/{{ item }}"
+    state: present
+  with_fileglob:
+    - "../scripts/*"
+
+- include_tasks: configure_nfs.yaml
+  when: inventory_hostname in groups['storage_server']
+
