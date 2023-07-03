@@ -1,6 +1,28 @@
 ---
-- import_playbook: prepare_the_pi.yaml
-  when: setup_pi is defined and setup_pi|default(false)|bool == true
+- name: Raspberry Pi Setup and Deployment
+  hosts: rpi
+  become: true
+  remote_user: pi
+  environment:
+    PATH: "/home/pi/.local/bin:{{ ansible_env.PATH }}"
+  vars:
+    pi_locale: "en_US.UTF-8"
+    data_path: "/mnt/data"
+    duckdns_domain: "dpinhas.duckdns.org"
 
-- import_playbook: install_and_deploy.yaml
-  when: deploy|bool == true
+  tasks:
+    - name: Verify Required Variables
+      assert:
+        that:
+          - "perform_raspberry_pi_setup is defined and (perform_raspberry_pi_setup or not perform_raspberry_pi_setup)"
+          - "deploy_docker_containers is defined and (deploy_docker_containers or not deploy_docker_containers)"
+        fail_msg: "The variable is not defined or is not a boolean value."
+
+    - name: Include Raspberry Pi Setup Tasks
+      ansible.builtin.include_tasks: setup_raspberry_pi.yaml
+      when: perform_raspberry_pi_setup | default(false) | bool
+
+    - name: Include Docker Deployment Tasks
+      ansible.builtin.include_tasks: deploy_docker_containers.yaml
+      when: deploy_docker_containers | default(false) | bool
+
