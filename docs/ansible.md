@@ -30,7 +30,7 @@ ansible-galaxy install -r requirements.yaml
 5. Run the playbook:
 
 ```shell
-ansible-playbook main.yaml -e setup_pi=true -e deploy=true -l pi0
+ansible-playbook main.yaml -l pi0 -e perform_raspberry_pi_setup=true -e deploy_docker_containers=true
 ```
 
 This will execute the tasks to prepare the Raspberry Pi and install/deploy Docker containers based on your configuration.
