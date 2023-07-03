@@ -7,7 +7,7 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   rules:
-  - host: jackett-hmc.duckdns.org
+  - host: index.dpinhas.duckdns.org
     http:
       paths:
       - path: /

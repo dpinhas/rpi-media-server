@@ -7,7 +7,7 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   rules:
-  - host: sonarr-hmc.duckdns.org
+  - host: tv.dpinhas.duckdns.org
     http:
       paths:
       - path: /
