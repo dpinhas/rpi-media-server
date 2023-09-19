@@ -1,6 +1,6 @@
 ---
 - name: Raspberry Pi Setup and Deployment
-  hosts: rpi
+-  hosts: rpi
   become: true
   remote_user: pi
   environment:
