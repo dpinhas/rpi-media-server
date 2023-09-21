@@ -87,3 +87,24 @@ services:
       - /var/lib/docker/:/var/lib/docker:ro
     ports:
       - "8081:8080"
+
+  tailscale:
+    privileged: true
+    hostname: pi1
+    container_name: tailscale
+    image: tailscale/tailscale:latest
+    volumes:
+      - "${DATA_PATH}/config/tailscale:/var/lib"
+      - "/dev/net/tun:/dev/net/tun"
+    cap_add:
+      - net_admin
+      - sys_module
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TS_USERSPACE=true
+      - TS_AUTH_KEY=foobar
+      - TS_ROUTES=192.168.31.0/24
+    command:
+      - "tailscaled"
+    restart: unless-stopped
