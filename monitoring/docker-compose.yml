@@ -46,14 +46,23 @@ services:
       - '--config.file=/config/blackbox.yml'
 
   homebridge:
-    image: oznu/homebridge:ubuntu
+    image: homebridge/homebridge:latest
     network_mode: host
     container_name: homebridge
     restart: always
-    environment:
-      - HOMEBRIDGE_CONFIG_UI_PORT=8581
     volumes:
-      - ${DATA_PATH}/config/homebridge:/homebridge
+      - /mnt/data/config/homebridge:/homebridge
+    logging:
+      driver: json-file
+      options:
+        max-size: "10mb"
+        max-file: "1"
+    environment:
+      - PGID=1000
+      - PUID=1000
+      - HOMEBRIDGE_CONFIG_UI=1
+      - HOMEBRIDGE_CONFIG_UI_PORT=8581
+      - TZ=Australia/Sydney
 
   node-exporter:
     image: prom/node-exporter:latest
