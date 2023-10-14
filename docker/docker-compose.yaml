@@ -173,8 +173,7 @@ services:
       - TZ=Europe/London
     volumes:
       - /mnt/data/config/bazarr:/config
-      - /mnt/data/library/movies:/movies #optional
-      - /mnt/data/library/tv:/tv #optional
+      - /mnt/data/library:/library/
     ports:
       - 6767:6767
     labels:

@@ -1,19 +1,24 @@
 #!/bin/bash
 
+# Find the last upgrade entry in /var/log/dpkg.log
+last_upgrade=$(grep "upgrade " /var/log/dpkg.log | tail -n 1)
 
-for i in $(ls /var/log/apt/history*) ; do
-    if [[ $i == *.log ]] ; then
-        if grep -q upgrade /var/log/apt/history.log ; then
-            echo yes
-            continue
-        fi
-    else
-        last_upgrade=$(zcat $i  | grep upgrade -B1 | tail -2 |grep Start-Date | awk -F ' ' '{print $2}' | sed 's/-//g')
-        break
-    fi
-done
-now=$(date '+%Y%m%d')
-result=$(( ($(date --date="$now" +%s) - $(date --date="$last_upgrade" +%s) )/(60*60*24) ))
+if [ -n "$last_upgrade" ]; then
+    # Extract the timestamp
+    last_upgrade_timestamp=$(echo "$last_upgrade" | awk '{print $1, $2}')
 
-echo node_apt_last_upgrade  $result > /home/pi/rpi-media-server/monitoring/config/custom_metrics/last_update_$(hostname).prom
-chown pi:pi /home/pi/rpi-media-server/monitoring/config/custom_metrics/last_update_$(hostname).prom
+    # Convert the timestamp into seconds since the Unix epoch
+    last_upgrade_seconds=$(date -d "$last_upgrade_timestamp" +%s)
+
+    # Get the current time in seconds since the Unix epoch
+    current_time=$(date +%s)
+
+    # Calculate the number of days since the last upgrade
+    days_ago=$(( (current_time - last_upgrade_seconds) / 86400 ))
+
+    echo "node_apt_last_upgrade $days_ago" > /home/pi/rpi-media-server/monitoring/config/custom_metrics/last_update_$(hostname).prom
+    chown pi:pi /home/pi/rpi-media-server/monitoring/config/custom_metrics/last_update_$(hostname).prom
+else
+    echo "No upgrade history found."
+fi
+
