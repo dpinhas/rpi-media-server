@@ -60,6 +60,9 @@ for DIRECTORY in "${DIRECTORIES[@]}"; do
         fi
       fi
     fi
-  done < <(du --block-size=1 --max-depth=1 "$DIRECTORY" 2>/dev/null)
+  done < <(du --block-size=1 --max-depth=1 "$DIRECTORY" | \
+            sed -e 's/\/mnt\/data\/library\/tv\//\[T\] /' \
+              -e 's/\/mnt\/data\/library\/movies\//\[M\] /' \
+              -e 's/\/\//\//' | cut -c 1-40)
 done
 

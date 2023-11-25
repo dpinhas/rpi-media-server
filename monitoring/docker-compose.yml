@@ -117,3 +117,11 @@ services:
     command:
       - "tailscaled"
     restart: unless-stopped
+
+  ping_exporter:
+    image: czerwonk/ping_exporter
+    container_name: ping_exporter
+    volumes:
+      - "./config/ping_exporter.yml:/config/config.yml"
+    ports:
+      - "9427:9427"

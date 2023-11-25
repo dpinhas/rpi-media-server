@@ -18,6 +18,15 @@ scrape_configs:
       regex: "([^:]+):\\d+"
       target_label: instance
 
+  - job_name: 'ping-exporter'
+    static_configs:
+      - targets: ['192.168.31.11:9427']
+    relabel_configs:
+      - source_labels: [__name__]
+        regex: "ping_loss_ratio"
+        target_label: __name__
+        replacement: "ping_loss_percent"
+
   - job_name: 'cadvisor'
     static_configs:
       - targets: ['192.168.31.10:8081', '192.168.31.11:8081']
@@ -87,3 +96,8 @@ scrape_configs:
       - target_label: __address__
         replacement: blackbox:9115
 
+  - job_name: 'traefik'
+#    scheme: https
+    static_configs:
+      - targets: ['proxy.dpinhas.duckdns.org']
+    metrics_path: "/metrics"
