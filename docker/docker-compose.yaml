@@ -121,6 +121,10 @@ services:
     command:
       - "--api.dashboard=true"
       - "--api.insecure=true"
+      - "--log.level=DEBUG"
+      - "--metrics.prometheus=true"
+      - "--metrics.prometheus.buckets=0.1,0.3,1.2,5.0"
+      - "--entryPoints.metrics.address=:8083"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
