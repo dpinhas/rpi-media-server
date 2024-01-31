@@ -3,7 +3,7 @@ version: "3.8"
 
 services:
   sonarr:
-    image: ghcr.io/linuxserver/sonarr:develop
+    image: ghcr.io/linuxserver/sonarr:latest
     container_name: sonarr
     environment:
       - PUID=1000
@@ -230,7 +230,7 @@ services:
       - 3000:3000/tcp
       - 53:53/tcp
       - 53:53/udp
-      - 8082:80/tcp
+      - 8082:8082/tcp
       - 8443:443/tcp
       - 443:443/udp
     restart: unless-stopped
@@ -262,3 +262,12 @@ services:
       - "traefik.http.routers.jellyseerr.entrypoints=web-secure"
       - "traefik.http.services.jellyseerr.loadbalancer.server.port=5055"
       - "traefik.http.routers.jellyseerr.tls.certresolver=myresolver"
+
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=info
+    ports:
+      - 8191:8191
+    restart: unless-stopped
