@@ -24,8 +24,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.sonarr.rule=Host(`tv.dpinhas.duckdns.org`)"
       - "traefik.http.routers.sonarr.entrypoints=web-secure"
-      - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
       - "traefik.http.routers.sonarr.tls.certresolver=myresolver"
+      - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
 
   radarr:
     image: ghcr.io/linuxserver/radarr:latest
@@ -49,8 +49,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.radarr.rule=Host(`movies.dpinhas.duckdns.org`)"
       - "traefik.http.routers.radarr.entrypoints=web-secure"
-      - "traefik.http.services.radarr.loadbalancer.server.port=7878"
       - "traefik.http.routers.radarr.tls.certresolver=myresolver"
+      - "traefik.http.services.radarr.loadbalancer.server.port=7878"
 
   jackett:
     image: ghcr.io/linuxserver/jackett:latest
@@ -103,16 +103,16 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.transmission.rule=Host(`download.dpinhas.duckdns.org`)"
       - "traefik.http.routers.transmission.entrypoints=web-secure"
-      - "traefik.http.services.transmission.loadbalancer.server.port=9091"
       - "traefik.http.routers.transmission.tls.certresolver=myresolver"
+      - "traefik.http.services.transmission.loadbalancer.server.port=9091"
 
   traefik:
     image: traefik:latest
     container_name: traefik
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ${DATA_PATH}/config/traefik/letsencrypt:/letsencrypt
-      - ${DATA_PATH}/config/traefik/services.yaml:/etc/traefik/services.yaml
+      - ${DATA_PATH}/config/letsencrypt:/letsencrypt
+      - ./traefik/dynamic.yaml:/etc/traefik/dynamic.yaml
     ports:
       - "80:80"
       - "8080:8080"
@@ -121,12 +121,14 @@ services:
     command:
       - "--api.dashboard=true"
       - "--api.insecure=true"
-      - "--log.level=DEBUG"
+      - "--log.level=INFO"
       - "--metrics.prometheus=true"
       - "--metrics.prometheus.buckets=0.1,0.3,1.2,5.0"
       - "--entryPoints.metrics.address=:8083"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.filename=/etc/traefik/dynamic.yaml"
+      # Entrypoints
       - "--entrypoints.web.address=:80"
       - "--entrypoints.web.http.redirections.entryPoint.to=web-secure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
@@ -134,43 +136,24 @@ services:
       - "--entrypoints.web-secure.http.tls.certResolver=myresolver"
       - "--entrypoints.web-secure.http.tls.domains[0].main=duckdns.org"
       - "--entrypoints.web-secure.http.tls.domains[0].sans=*.duckdns.org"
+      # Lets-encrypt
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.delaybeforecheck=0"
       - "--certificatesresolvers.myresolver.acme.dnschallenge.provider=duckdns"
       - "--certificatesresolvers.myresolver.acme.email=dor.pinhas1@gmail.com"
       - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
-      - "--providers.file.filename=/etc/traefik/services.yaml"
     environment:
       - DUCKDNS_TOKEN=54646b5f-f855-419f-87c2-ee6326a39183
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.traefik-ui.rule=Host(`proxy.dpinhas.duckdns.org`)"
       - "traefik.http.routers.traefik-ui.entrypoints=web-secure"
-      - "traefik.http.services.traefik-ui.loadbalancer.server.port=8080"
       - "traefik.http.routers.traefik-ui.tls.certresolver=myresolver"
-      - "traefik.http.routers.traefik-ui.service=traefik-ui"
-
-      - "traefik.http.routers.grafana.rule=Host(`grafana.dpinhas.duckdns.org`)"
-      - "traefik.http.routers.grafana.entrypoints=web-secure"
-      - "traefik.http.routers.grafana.service=grafana@file"
-      - "traefik.http.routers.grafana.tls.certresolver=myresolver"
-
-      - "traefik.http.routers.prometheus.rule=Host(`prometheus.dpinhas.duckdns.org`)"
-      - "traefik.http.routers.prometheus.entrypoints=web-secure"
-      - "traefik.http.routers.prometheus.service=prometheus@file"
-      - "traefik.http.routers.prometheus.tls.certresolver=myresolver"
-
-      - "traefik.http.routers.blackbox.rule=Host(`blackbox.dpinhas.duckdns.org`)"
-      - "traefik.http.routers.blackbox.entrypoints=web-secure"
-      - "traefik.http.routers.blackbox.service=blackbox@file"
-      - "traefik.http.routers.blackbox.tls.certresolver=myresolver"
-
-      - "traefik.http.routers.homebridge.rule=Host(`homebridge.dpinhas.duckdns.org`)"
-      - "traefik.http.routers.homebridge.entrypoints=web-secure"
-      - "traefik.http.routers.homebridge.service=homebridge@file"
-      - "traefik.http.routers.homebridge.tls.certresolver=myresolver"
+      - "traefik.http.services.traefik-ui.loadbalancer.server.port=8080"
 
   bazarr:
     image: lscr.io/linuxserver/bazarr:latest
     container_name: bazarr
+    restart: unless-stopped
     environment:
       - PUID=1000
       - PGID=1000
@@ -184,9 +167,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.bazarr.rule=Host(`subtitles.dpinhas.duckdns.org`)"
       - "traefik.http.routers.bazarr.entrypoints=web-secure"
-      - "traefik.http.services.bazarr.loadbalancer.server.port=6767"
       - "traefik.http.routers.bazarr.tls.certresolver=myresolver"
-    restart: unless-stopped
+      - "traefik.http.services.bazarr.loadbalancer.server.port=6767"
 
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:latest
@@ -204,21 +186,13 @@ services:
       - 8096:8096
       - 8920:8920 #optional
       - 7359:7359/udp #optional
-     # - 1900:1900/udp #optional
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.jellyfin.service=jellyfin"
-      - "traefik.http.routers.jellyfin.rule=Host(`play.dpinhas.duckdns.org`)"
+      - "traefik.http.routers.jellyfin.rule=Host(`play.dpinhas.duckdns.org`,`play.dpinhas-public.duckdns.org`)"
       - "traefik.http.routers.jellyfin.entrypoints=web-secure"
-      - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
       - "traefik.http.routers.jellyfin.tls.certresolver=myresolver"
-
-      - "traefik.http.routers.jellyfin-ext.service=jellyfin-ext"
-      - "traefik.http.routers.jellyfin-ext.rule=Host(`play.dpinhas-public.duckdns.org`)"
-      - "traefik.http.routers.jellyfin-ext.entrypoints=web-secure"
-      - "traefik.http.services.jellyfin-ext.loadbalancer.server.port=8096"
-      - "traefik.http.routers.jellyfin-ext.tls.certresolver=myresolver"
+      - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
 
   adguardhome:
     image: adguard/adguardhome
@@ -236,11 +210,10 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.adguard.service=adguard"
       - "traefik.http.routers.adguard.rule=Host(`adguard.dpinhas.duckdns.org`)"
       - "traefik.http.routers.adguard.entrypoints=web-secure"
-      - "traefik.http.services.adguard.loadbalancer.server.port=8082"
       - "traefik.http.routers.adguard.tls.certresolver=myresolver"
+      - "traefik.http.services.adguard.loadbalancer.server.port=8082"
 
   jellyseerr:
     image: fallenbagel/jellyseerr:latest
@@ -257,11 +230,10 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.jellyseerr.service=jellyseerr"
       - "traefik.http.routers.jellyseerr.rule=Host(`request.dpinhas.duckdns.org`)"
       - "traefik.http.routers.jellyseerr.entrypoints=web-secure"
-      - "traefik.http.services.jellyseerr.loadbalancer.server.port=5055"
       - "traefik.http.routers.jellyseerr.tls.certresolver=myresolver"
+      - "traefik.http.services.jellyseerr.loadbalancer.server.port=5055"
 
   flaresolverr:
     image: ghcr.io/flaresolverr/flaresolverr:latest
