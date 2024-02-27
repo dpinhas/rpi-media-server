@@ -1,0 +1,48 @@
+http:
+  routers:
+    grafana:
+      rule: "Host(`grafana.dpinhas.duckdns.org`)"
+      service: grafana
+      entrypoints: 
+        - "web-secure"
+      tls:
+        certResolver: myresolver
+    prometheus:
+      rule: "Host(`prometheus.dpinhas.duckdns.org`)"
+      service: prometheus
+      entrypoints: 
+        - "web-secure"
+      tls:
+        certResolver: myresolver
+    blackbox:
+      rule: "Host(`blackbox.dpinhas.duckdns.org`)"
+      service: blackbox
+      entrypoints: 
+        - "web-secure"
+      tls:
+        certResolver: myresolver
+    homebridge:
+      rule: "Host(`homebridge.dpinhas.duckdns.org`)"
+      service: homebridge
+      entrypoints: 
+        - "web-secure"
+      tls:
+        certResolver: myresolver
+
+  services:
+    grafana:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.31.11:3000"
+    prometheus:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.31.11:9090"
+    blackbox:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.31.11:9115"
+    homebridge:
+      loadBalancer:
+        servers:
+          - url: "http://192.168.31.11:8581"
