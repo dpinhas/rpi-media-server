@@ -56,6 +56,4 @@ remove_empty_directories "$parent_directory" "$dry_run"
 
 if [ "$dry_run" == "true" ]; then
     echo "Dry run complete. No directories were deleted."
-else
-    echo "Cleanup complete."
 fi
