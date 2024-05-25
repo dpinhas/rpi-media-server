@@ -1,6 +1,4 @@
 ---
-version: "3.8"
-
 services:
   sonarr:
     image: ghcr.io/linuxserver/sonarr:latest
@@ -242,4 +240,16 @@ services:
       - LOG_LEVEL=info
     ports:
       - 8191:8191
+    restart: unless-stopped
+
+  portainer:
+    container_name: portainer
+    image: portainer/portainer-ce:latest
+    ports:
+        - 8000:8000
+        - 9443:9443
+        - 9000:9000
+    volumes:
+      - ${DATA_PATH}/config/portainer/data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
     restart: unless-stopped
