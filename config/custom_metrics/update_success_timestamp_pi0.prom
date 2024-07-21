@@ -1,0 +1,3 @@
+# HELP update_success_timestamp_seconds The last time apt-get update was successful, in Unix time.
+# TYPE update_success_timestamp_seconds gauge
+update_success_timestamp_seconds 1716646016

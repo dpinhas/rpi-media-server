@@ -1,0 +1,2 @@
+# HELP node_directory_size_bytes Disk space used by some directories
+# TYPE node_directory_size_bytes gauge

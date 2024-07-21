@@ -2,7 +2,7 @@
 
 # Define paths to the necessary files and directories
 UPDATE_SUCCESS_STAMP="/var/lib/apt/periodic/update-success-stamp"
-OUTPUT_FILE="/home/pi/rpi-media-server/monitoring/config/custom_metrics/update_success_timestamp_$(hostname).prom"
+OUTPUT_FILE="/home/pi/rpi-media-server/config/custom_metrics/update_success_timestamp_$(hostname).prom"
 
 # Check if the update-success-stamp file exists
 if [ -f "$UPDATE_SUCCESS_STAMP" ]; then
