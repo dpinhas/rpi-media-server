@@ -1,4 +1,4 @@
-version: '3.8'
+---
 services:
   sonarr:
     image: ghcr.io/linuxserver/sonarr:${SONARR_TAG}
