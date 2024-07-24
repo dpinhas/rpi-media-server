@@ -39,7 +39,7 @@ for DIRECTORY in "${DIRECTORIES[@]}"; do
   fi
 
   # Determine the output file based on the directory
-  OUTPUT_FILE="/home/pi/rpi-media-server/monitoring/config/custom_metrics/directory_size_$(basename "$DIRECTORY").prom"
+  OUTPUT_FILE="/home/pi/rpi-media-server/config/custom_metrics/directory_size_$(basename "$DIRECTORY").prom"
 
   echo "# HELP node_directory_size_bytes Disk space used by some directories" > "$OUTPUT_FILE"
   echo "# TYPE node_directory_size_bytes gauge" >> "$OUTPUT_FILE"

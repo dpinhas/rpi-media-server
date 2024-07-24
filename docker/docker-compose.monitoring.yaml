@@ -1,6 +1,4 @@
 ---
-version: '3.8'
-
 services:
   prometheus:
     image: prom/prometheus:latest
@@ -8,7 +6,7 @@ services:
     container_name: prometheus
     restart: unless-stopped
     volumes:
-      - ${PWD}/config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ${PWD}/../config/prometheus.yml:/etc/prometheus/prometheus.yml
       - ${DATA_PATH}/config/prometheus/data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -39,7 +37,7 @@ services:
       - "9115:9115"
     restart: always
     volumes:
-      - ${PWD}/config/blackbox.yml:/config/blackbox.yml
+      - ${PWD}/../config/blackbox.yml:/config/blackbox.yml
     sysctls:
       net.ipv4.ping_group_range: "0 2147483647"
     command:
@@ -72,7 +70,7 @@ services:
       - /sys:/host/sys:ro
       - /:/rootfs:ro
       - /mnt/data:/mnt/data:ro
-      - ${PWD}/config/custom_metrics/:/custom_metrics
+      - ${PWD}/../config/custom_metrics/:/custom_metrics
     command:
       - '--path.procfs=/host/proc'
       - '--path.sysfs=/host/sys'
@@ -82,7 +80,7 @@ services:
       - "9100:9100"
 
   cadvisor:
-    image: zcube/cadvisor:latest # switched image
+    image: zcube/cadvisor:latest
     container_name: cadvisor
     command:
       - "--docker_only=true"
@@ -122,6 +120,6 @@ services:
     image: czerwonk/ping_exporter
     container_name: ping_exporter
     volumes:
-      - "./config/ping_exporter.yml:/config/config.yml"
+      - "${PWD}/../config/ping_exporter.yml:/config/config.yml"
     ports:
       - "9427:9427"
