@@ -1,12 +1,12 @@
----
+version: '3.8'
 services:
   sonarr:
-    image: ghcr.io/linuxserver/sonarr:latest
+    image: ghcr.io/linuxserver/sonarr:${SONARR_TAG}
     container_name: sonarr
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Asia/Jerusalem
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
     volumes:
       - ${DATA_PATH}/config/sonarr:/config
       - ${DATA_PATH}/library:/library
@@ -20,7 +20,7 @@ services:
       retries: 5
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.sonarr.rule=Host(`tv.dpinhas.duckdns.org`)"
+      - "traefik.http.routers.sonarr.rule=Host(`${SONARR_HOST}`)"
       - "traefik.http.routers.sonarr.entrypoints=web-secure"
       - "traefik.http.routers.sonarr.tls.certresolver=myresolver"
       - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
@@ -28,12 +28,12 @@ services:
       - pi0_network
 
   radarr:
-    image: ghcr.io/linuxserver/radarr:latest
+    image: ghcr.io/linuxserver/radarr:${RADARR_TAG}
     container_name: radarr
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Asia/Jerusalem
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
     volumes:
       - ${DATA_PATH}/config/radarr:/config
       - ${DATA_PATH}/library:/library
@@ -47,7 +47,7 @@ services:
       retries: 5
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.radarr.rule=Host(`movies.dpinhas.duckdns.org`)"
+      - "traefik.http.routers.radarr.rule=Host(`${RADARR_HOST}`)"
       - "traefik.http.routers.radarr.entrypoints=web-secure"
       - "traefik.http.routers.radarr.tls.certresolver=myresolver"
       - "traefik.http.services.radarr.loadbalancer.server.port=7878"
@@ -55,12 +55,12 @@ services:
       - pi0_network
 
   jackett:
-    image: ghcr.io/linuxserver/jackett:latest
+    image: ghcr.io/linuxserver/jackett:${JACKETT_TAG}
     container_name: jackett
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Asia/Jerusalem
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
       - AUTO_UPDATE=true
     volumes:
       - ${DATA_PATH}/config/jackett:/config
@@ -75,7 +75,7 @@ services:
       retries: 5
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.jackett.rule=Host(`index.dpinhas.duckdns.org`)"
+      - "traefik.http.routers.jackett.rule=Host(`${JACKETT_HOST}`)"
       - "traefik.http.routers.jackett.entrypoints=web-secure"
       - "traefik.http.routers.jackett.tls.certresolver=myresolver"
       - "traefik.http.services.jackett.loadbalancer.server.port=9117"
@@ -83,12 +83,12 @@ services:
       - pi0_network
 
   transmission:
-    image: ghcr.io/linuxserver/transmission:latest
+    image: ghcr.io/linuxserver/transmission:${TRANSMISSION_TAG}
     container_name: transmission
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Asia/Jerusalem
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
     volumes:
       - ${DATA_PATH}/config/transmission:/config
       - ${DATA_PATH}/library/downloads:/library/downloads
@@ -105,7 +105,7 @@ services:
       retries: 5
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.transmission.rule=Host(`download.dpinhas.duckdns.org`)"
+      - "traefik.http.routers.transmission.rule=Host(`${TRANSMISSION_HOST}`)"
       - "traefik.http.routers.transmission.entrypoints=web-secure"
       - "traefik.http.routers.transmission.tls.certresolver=myresolver"
       - "traefik.http.services.transmission.loadbalancer.server.port=9091"
@@ -113,13 +113,13 @@ services:
       - pi0_network
 
   bazarr:
-    image: lscr.io/linuxserver/bazarr:latest
+    image: lscr.io/linuxserver/bazarr:${BAZARR_TAG}
     container_name: bazarr
     restart: unless-stopped
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/London
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
     volumes:
       - ${DATA_PATH}/config/bazarr:/config
       - ${DATA_PATH}/library:/library/
@@ -127,7 +127,7 @@ services:
       - 6767:6767
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.bazarr.rule=Host(`subtitles.dpinhas.duckdns.org`)"
+      - "traefik.http.routers.bazarr.rule=Host(`${BAZARR_HOST}`)"
       - "traefik.http.routers.bazarr.entrypoints=web-secure"
       - "traefik.http.routers.bazarr.tls.certresolver=myresolver"
       - "traefik.http.services.bazarr.loadbalancer.server.port=6767"
@@ -135,13 +135,13 @@ services:
       - pi0_network
 
   jellyfin:
-    image: lscr.io/linuxserver/jellyfin:latest
+    image: lscr.io/linuxserver/jellyfin:${JELLYFIN_TAG}
     container_name: jellyfin
     environment:
-      - PUID=1000
-      - PGID=1000
-      - TZ=Europe/London
-      - JELLYFIN_PublishedServerUrl=192.168.31.10 #optional
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TIMEZONE}
+      - JELLYFIN_PublishedServerUrl=${JELLYFIN_PUBLISHED_SERVER_URL}
     volumes:
       - ${DATA_PATH}/config/jellyfin:/config
       - ${DATA_PATH}/library/tv:/data/tvshows
@@ -153,7 +153,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.jellyfin.rule=Host(`play.dpinhas.duckdns.org`) || Host(`play.dpinhas-public.duckdns.org`)"
+      - "traefik.http.routers.jellyfin.rule=Host(`${JELLYFIN_HOST}`)"
       - "traefik.http.routers.jellyfin.entrypoints=web-secure"
       - "traefik.http.routers.jellyfin.tls.certresolver=myresolver"
       - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
@@ -161,13 +161,13 @@ services:
       - pi0_network
 
   jellyseerr:
-    image: fallenbagel/jellyseerr:latest
+    image: fallenbagel/jellyseerr:${JELLYSEERR_TAG}
     container_name: jellyseerr
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=${PUID}
+      - PGID=${PGID}
       - LOG_LEVEL=debug
-      - TZ=Asia/Jerusalem
+      - TZ=${TIMEZONE}
     ports:
       - 5055:5055
     volumes:
@@ -175,7 +175,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.jellyseerr.rule=Host(`request.dpinhas.duckdns.org`)"
+      - "traefik.http.routers.jellyseerr.rule=Host(`${JELLYSEERR_HOST}`)"
       - "traefik.http.routers.jellyseerr.entrypoints=web-secure"
       - "traefik.http.routers.jellyseerr.tls.certresolver=myresolver"
       - "traefik.http.services.jellyseerr.loadbalancer.server.port=5055"

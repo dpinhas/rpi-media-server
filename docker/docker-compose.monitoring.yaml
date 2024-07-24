@@ -1,8 +1,9 @@
----
+version: '3.8'
+
 services:
   prometheus:
-    image: prom/prometheus:latest
-    user: "1000:1000"
+    image: prom/prometheus:${PROMETHEUS_TAG}
+    user: "${PUID}:${PGID}"
     container_name: prometheus
     restart: unless-stopped
     volumes:
@@ -11,14 +12,14 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=10d'
+      - '--storage.tsdb.retention.time=${PROMETHEUS_RETENTION}'
       - '--web.enable-admin-api'
     ports:
-      - "9090:9090"
+      - "${PROMETHEUS_PORT}:9090"
 
   grafana:
-    image: grafana/grafana:latest
-    user: "1000:1000"
+    image: grafana/grafana:${GRAFANA_TAG}
+    user: "${PUID}:${PGID}"
     container_name: grafana
     restart: unless-stopped
     links:
@@ -26,15 +27,15 @@ services:
     volumes:
       - ${DATA_PATH}/config/grafana:/var/lib/grafana
     ports:
-      - "3000:3000"
+      - "${GRAFANA_PORT}:3000"
     environment:
-      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ENABLED=${GF_AUTH_ANONYMOUS_ENABLED}
 
   blackbox:
-    image: prom/blackbox-exporter:latest
+    image: prom/blackbox-exporter:${BLACKBOX_TAG}
     container_name: blackbox
     ports:
-      - "9115:9115"
+      - "${BLACKBOX_PORT}:9115"
     restart: always
     volumes:
       - ${PWD}/../config/blackbox.yml:/config/blackbox.yml
@@ -44,26 +45,26 @@ services:
       - '--config.file=/config/blackbox.yml'
 
   homebridge:
-    image: homebridge/homebridge:latest
+    image: homebridge/homebridge:${HOMEBRIDGE_TAG}
     network_mode: host
     container_name: homebridge
     restart: always
     volumes:
-      - /mnt/data/config/homebridge:/homebridge
+      - ${DATA_PATH}/config/homebridge:/homebridge
     logging:
       driver: json-file
       options:
-        max-size: "10mb"
-        max-file: "1"
+        max-size: "${HOMEBRIDGE_LOG_MAX_SIZE}"
+        max-file: "${HOMEBRIDGE_LOG_MAX_FILE}"
     environment:
-      - PGID=1000
-      - PUID=1000
-      - HOMEBRIDGE_CONFIG_UI=1
-      - HOMEBRIDGE_CONFIG_UI_PORT=8581
-      - TZ=Australia/Sydney
+      - PGID=${PGID}
+      - PUID=${PUID}
+      - HOMEBRIDGE_CONFIG_UI=${HOMEBRIDGE_CONFIG_UI}
+      - HOMEBRIDGE_CONFIG_UI_PORT=${HOMEBRIDGE_CONFIG_UI_PORT}
+      - TZ=${TIMEZONE}
 
   node-exporter:
-    image: prom/node-exporter:latest
+    image: prom/node-exporter:${NODE_EXPORTER_TAG}
     container_name: node-exporter
     volumes:
       - /proc:/host/proc:ro
@@ -77,10 +78,10 @@ services:
       - '--collector.textfile.directory=/custom_metrics/'
     restart: unless-stopped
     ports:
-      - "9100:9100"
+      - "${NODE_EXPORTER_PORT}:9100"
 
   cadvisor:
-    image: zcube/cadvisor:latest
+    image: zcube/cadvisor:${CADVISOR_TAG}
     container_name: cadvisor
     command:
       - "--docker_only=true"
@@ -93,13 +94,13 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
     ports:
-      - "8081:8080"
+      - "${CADVISOR_PORT}:8080"
 
   tailscale:
     privileged: true
-    hostname: pi1
+    hostname: ${TAILSCALE_HOSTNAME}
     container_name: tailscale
-    image: tailscale/tailscale:latest
+    image: tailscale/tailscale:${TAILSCALE_TAG}
     volumes:
       - "${DATA_PATH}/config/tailscale:/var/lib"
       - "/dev/net/tun:/dev/net/tun"
@@ -107,19 +108,19 @@ services:
       - net_admin
       - sys_module
     environment:
-      - PUID=1000
-      - PGID=1000
+      - PUID=${PUID}
+      - PGID=${PGID}
       - TS_USERSPACE=true
-      - TS_AUTH_KEY=foobar
-      - TS_ROUTES=192.168.31.0/24
+      - TS_AUTH_KEY=${TS_AUTH_KEY}
+      - TS_ROUTES=${TS_ROUTES}
     command:
       - "tailscaled"
     restart: unless-stopped
 
   ping_exporter:
-    image: czerwonk/ping_exporter
+    image: czerwonk/ping_exporter:${PING_EXPORTER_TAG}
     container_name: ping_exporter
     volumes:
       - "${PWD}/../config/ping_exporter.yml:/config/config.yml"
     ports:
-      - "9427:9427"
+      - "${PING_EXPORTER_PORT}:9427"
