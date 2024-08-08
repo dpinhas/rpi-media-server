@@ -54,8 +54,8 @@ docker_pull: ## Pull the latest images
 
 docker_cleanup: ## Remove stopped containers and unused images
 	@echo "Cleaning up stopped containers and unused images..."
-	@docker system prune -f && \
-	docker volume prune -f
+	@docker system prune -af && \
+	docker volume prune -af
 
 help: ## Display this help message
 	@echo "Available targets:"
