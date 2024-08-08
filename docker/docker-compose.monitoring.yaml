@@ -75,6 +75,7 @@ services:
       - '--path.procfs=/host/proc'
       - '--path.sysfs=/host/sys'
       - '--collector.textfile.directory=/custom_metrics/'
+      - '--collector.tcpstat'
     restart: unless-stopped
     ports:
       - "${NODE_EXPORTER_PORT}:9100"
@@ -99,6 +100,7 @@ services:
     privileged: true
     hostname: ${TAILSCALE_HOSTNAME}
     container_name: tailscale
+    network_mode: "host"
     image: tailscale/tailscale:${TAILSCALE_TAG}
     volumes:
       - "${DATA_PATH}/config/tailscale:/var/lib"
