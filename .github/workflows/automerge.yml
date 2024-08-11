@@ -40,7 +40,7 @@ jobs:
       - name: Auto-Merge Pull Request
         uses: reitermarkus/automerge@v2
         with:
-          token: ${{ secrets.github_token }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           merge-method: rebase
           do-not-merge-labels: never-merge
           required-labels: automerge
