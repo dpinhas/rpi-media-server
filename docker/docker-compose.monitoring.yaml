@@ -96,28 +96,6 @@ services:
     ports:
       - "${CADVISOR_PORT}:8080"
 
-  tailscale:
-    privileged: true
-    hostname: ${TAILSCALE_HOSTNAME}
-    container_name: tailscale
-    network_mode: "host"
-    image: tailscale/tailscale:${TAILSCALE_TAG}
-    volumes:
-      - "${DATA_PATH}/config/tailscale:/var/lib"
-      - "/dev/net/tun:/dev/net/tun"
-    cap_add:
-      - net_admin
-      - sys_module
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TS_USERSPACE=true
-      - TS_AUTH_KEY=${TS_AUTH_KEY}
-      - TS_ROUTES=${TS_ROUTES}
-    command:
-      - "tailscaled"
-    restart: unless-stopped
-
   ping_exporter:
     image: czerwonk/ping_exporter:${PING_EXPORTER_TAG}
     container_name: ping_exporter

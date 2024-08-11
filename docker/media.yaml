@@ -153,10 +153,18 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
+
       - "traefik.http.routers.jellyfin.rule=Host(`${JELLYFIN_HOST}`)"
       - "traefik.http.routers.jellyfin.entrypoints=web-secure"
       - "traefik.http.routers.jellyfin.tls.certresolver=myresolver"
+      - "traefik.http.routers.jellyfin.service=jellyfin"
       - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
+
+      - "traefik.http.routers.jellyfin-pub.rule=Host(`${JELLYFIN_PUB_HOST}`)"
+      - "traefik.http.routers.jellyfin-pub.entrypoints=web-secure"
+      - "traefik.http.routers.jellyfin-pub.tls.certresolver=myresolver"
+      - "traefik.http.routers.jellyfin-pub.service=jellyfin-public"
+      - "traefik.http.services.jellyfin-public.loadbalancer.server.port=8096"
     networks:
       - pi0_network
 
