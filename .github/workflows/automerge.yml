@@ -1,0 +1,50 @@
+name: Automerge
+
+on:
+  push:
+  schedule:
+    - cron: '0,30 * * * *'
+
+  # Enable auto-merge when a pull request review is submitted.
+  pull_request_review:
+    types:
+      - submitted
+
+  # Enable auto-merge when a draft is marked as ready for review,
+  # a required label is applied, a "do not merge" label is removed,
+  # or when the pull request is updated.
+  pull_request_target:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - edited
+      - labeled
+      - unlabeled
+      - ready_for_review
+
+  # Manually trigger auto-merge for a specific pull request or review via workflow dispatch.
+  workflow_dispatch:
+    inputs:
+      pull-request:
+        description: Pull Request Number (optional)
+        required: false
+      review:
+        description: Review ID (optional)
+        required: false
+
+jobs:
+  automerge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Auto-Merge Pull Request
+        uses: reitermarkus/automerge@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          merge-method: rebase
+          do-not-merge-labels: never-merge
+          required-labels: automerge
+          pull-request: ${{ github.event.inputs.pull-request }}
+          review: ${{ github.event.inputs.review }}
+          dry-run: false
+
