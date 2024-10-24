@@ -40,6 +40,7 @@ for DIRECTORY in "${DIRECTORIES[@]}"; do
 
   # Determine the output file based on the directory
   OUTPUT_FILE="/home/pi/rpi-media-server/config/custom_metrics/directory_size_$(basename "$DIRECTORY").prom"
+  TEMP_FILE=$(mktemp)
 
   echo "# HELP node_directory_size_bytes Disk space used by some directories" > "$OUTPUT_FILE"
   echo "# TYPE node_directory_size_bytes gauge" >> "$OUTPUT_FILE"
@@ -56,7 +57,7 @@ for DIRECTORY in "${DIRECTORIES[@]}"; do
         if [ "$DEBUG" = true ]; then
           echo "${METRIC_NAME}{directory=\"$DIR_NAME\"} $METRIC_VALUE"
         else
-          echo "${METRIC_NAME}{directory=\"$DIR_NAME\"} $METRIC_VALUE" >> "$OUTPUT_FILE"
+          echo "${METRIC_NAME}{directory=\"$DIR_NAME\"} $METRIC_VALUE" >> "$TEMP_FILE"
         fi
       fi
     fi
@@ -64,5 +65,11 @@ for DIRECTORY in "${DIRECTORIES[@]}"; do
             sed -e 's/\/mnt\/data\/library\/tv\//\[T\] /' \
               -e 's/\/mnt\/data\/library\/movies\//\[M\] /' \
               -e 's/\/\//\//' | cut -c 1-40)
+
+  # Sort the temporary file by the numeric value in descending order and write to the output file
+  awk '{print $0}' "$TEMP_FILE" | sort -k2,2nr > "$OUTPUT_FILE"
+
+  # Clean up the temporary file
+  rm "$TEMP_FILE"
 done
 
