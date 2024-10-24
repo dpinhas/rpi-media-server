@@ -1,10 +1,11 @@
 # Makefile for Docker Compose
 
 # Variables
-DOCKER_COMPOSE_DIR=docker
+DOCKER_COMPOSE_DIR=$(PWD)/docker
 HOSTNAME=$(shell hostname)
 DOCKER_COMPOSE_FILE=docker-compose.yaml
 ENV_FILE=.env
+SHELL := /bin/bash
 
 # Conditional for hostname
 ifeq ($(HOSTNAME), pi1)
@@ -13,8 +14,7 @@ endif
 
 # Define functions
 define run_docker_compose
-	@cd $(DOCKER_COMPOSE_DIR) && \
-	docker compose -f $(DOCKER_COMPOSE_FILE) --env-file $(ENV_FILE) $(1)
+	cd $(DOCKER_COMPOSE_DIR) && docker compose -f $(DOCKER_COMPOSE_FILE) --env-file $(ENV_FILE) $(1)
 endef
 
 define check_service_cmd
@@ -54,8 +54,8 @@ docker_pull: ## Pull the latest images
 
 docker_cleanup: ## Remove stopped containers and unused images
 	@echo "Cleaning up stopped containers and unused images..."
-	@docker system prune -af && \
-	docker volume prune -af
+	@docker system prune -f && \
+	docker volume prune -f
 
 help: ## Display this help message
 	@echo "Available targets:"
