@@ -70,7 +70,7 @@ services:
       - pi0_network
 
   flaresolverr:
-    image: ghcr.io/flaresolverr/flaresolverr:${FLARESOLVERR_TAG}
+    image: nexter92/flaresolverr:${FLARESOLVERR_TAG}
     container_name: flaresolverr
     environment:
       - LOG_LEVEL=${FLARESOLVERR_LOG_LEVEL}
