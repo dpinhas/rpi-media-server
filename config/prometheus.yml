@@ -67,7 +67,6 @@ scrape_configs:
         - https://grafana.dpinhas.duckdns.org
         - https://download.dpinhas.duckdns.org
         - https://adguard.dpinhas.duckdns.org
-        - https://play.dpinhas-public.duckdns.org
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
@@ -85,7 +84,7 @@ scrape_configs:
       - targets: ['8.8.8.8', '8.8.4.4', '1.1.1.1', '1.0.0.1', '194.90.0.1']
         labels:
           group: 'external_network'
-      - targets: ['192.168.31.1', '192.168.31.10', '10.100.102.1']
+      - targets: ['192.168.31.1', '192.168.31.10']
         labels:
           group: 'internal_network'
     relabel_configs:
