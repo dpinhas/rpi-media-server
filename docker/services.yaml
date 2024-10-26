@@ -113,3 +113,21 @@ services:
     command:
       - "tailscaled"
     restart: unless-stopped
+
+  node-exporter:
+    image: prom/node-exporter:${NODE_EXPORTER_TAG}
+    container_name: node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - /mnt/data:/mnt/data:ro
+      - ${PWD}/../config/custom_metrics/:/custom_metrics
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.textfile.directory=/custom_metrics/'
+      - '--collector.tcpstat'
+    restart: unless-stopped
+    ports:
+      - "${NODE_EXPORTER_PORT}:9100"

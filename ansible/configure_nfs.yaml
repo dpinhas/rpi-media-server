@@ -1,3 +1,4 @@
+---
 - name: Retrieve UUID from the attached filesystems
   ansible.builtin.shell:
     cmd: blkid | grep sda | awk -F '\"' '{print $2}'
@@ -20,20 +21,19 @@
     name: nfs-kernel-server
     state: latest
 
-- name: Start nfs-server
-  ansible.builtin.service:
-    name: nfs-server
-    state: started
-    enabled: yes
-
 - name: Ensure required entries are made to hosts file
   ansible.builtin.lineinfile:
     path: /etc/exports
     line: "{{ item }}"
   loop:
     - "/mnt/data/       192.168.31.0/24(rw,sync,no_subtree_check)"
-  notify: Restart NFS service
+
+
+- name: Start nfs-server
+  ansible.builtin.service:
+    name: nfs-server
+    state: restarted
+    enabled: yes
 
 - name: Ensure the directory is ready for NFS usages
   ansible.builtin.command: exportfs -rav
-

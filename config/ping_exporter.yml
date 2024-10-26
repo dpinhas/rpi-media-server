@@ -6,7 +6,6 @@ targets:
   - 192.168.31.1
   - 192.168.31.10
   - play.dpinhas.duckdns.org
-  - play.dpinhas-public.duckdns.org
 
 dns:
   refresh: 2m15s

@@ -3,28 +3,28 @@ http:
     grafana:
       rule: "Host(`grafana.dpinhas.duckdns.org`)"
       service: grafana
-      entrypoints: 
+      entrypoints:
         - "web-secure"
       tls:
         certResolver: myresolver
     prometheus:
       rule: "Host(`prometheus.dpinhas.duckdns.org`)"
       service: prometheus
-      entrypoints: 
+      entrypoints:
         - "web-secure"
       tls:
         certResolver: myresolver
     blackbox:
       rule: "Host(`blackbox.dpinhas.duckdns.org`)"
       service: blackbox
-      entrypoints: 
+      entrypoints:
         - "web-secure"
       tls:
         certResolver: myresolver
     homebridge:
       rule: "Host(`homebridge.dpinhas.duckdns.org`)"
       service: homebridge
-      entrypoints: 
+      entrypoints:
         - "web-secure"
       tls:
         certResolver: myresolver
