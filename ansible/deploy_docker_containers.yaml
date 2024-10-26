@@ -1,45 +1,51 @@
 ---
 - name: Get Docker convenience script
+  become: true
   ansible.builtin.get_url:
     url: https://get.docker.com
-    dest: ~/get-docker.sh
+    dest: /root/get-docker.sh
     mode: '0755'
 
 - name: Check if Docker already installed
+  become: true
   ansible.builtin.command: dpkg-query -l docker
   register: package_check
   changed_when: false
   failed_when: false
 
 - name: Install Docker
-  ansible.builtin.command: sh /home/pi/get-docker.sh
+  become: true
+  ansible.builtin.command: sh /root/get-docker.sh
   args:
     creates: /usr/bin/docker
   when: package_check.rc != 0
 
 - name: Adding user pi to docker group
+  become: true
   ansible.builtin.user:
     name: pi
     groups: docker
     append: yes
-  become: true
+
+- name: Upgrade pip
+  ansible.builtin.pip:
+    name: pip
+    extra_args: --upgrade
+    executable: pip3
 
 - name: Install pip packages
   ansible.builtin.pip:
-    name: "{{ item }}"
-  loop:
-    - docker-compose
-    - ansible
-    - docker
-  become: true
-  executable: pip3
+    name: "docker-compose ansible docker"
+    extra_args: --no-build-isolation --break-system-packages
+    executable: pip3
 
 - name: Clone GitHub repository
   ansible.builtin.git:
     repo: git@github.com:dpinhas/rpi-media-server.git
-    dest: /home/pi/rpi-media-server
+    dest: /home/pi/rpi-media-server/
     clone: yes
     update: yes
+    version: main
 
 - name: Add DATA_PATH var to bashrc
   ansible.builtin.lineinfile:
@@ -49,33 +55,14 @@
     create: yes
     insertafter: EOF
 
-- name: Deploy cronjob
-  ansible.builtin.copy:
-    src: '../scripts/update_ddns_records'
-    dest: '/etc/cron.hourly'
-    mode: '0755'
-  become: true
-  when: inventory_hostname == 'pi0'
-
 - name: Deploy containers and services - docker-compose (pi0)
   ansible.builtin.command:
-    cmd: "docker-compose up -d"
-    chdir: /home/pi/rpi-media-server/docker
+    cmd: "make docker_start"
+    chdir: /home/pi/rpi-media-server
   register: docker_compose_output
   changed_when: docker_compose_output.stdout != ''
   failed_when: docker_compose_output.stdout != ''
-  when: inventory_hostname == 'pi0'
-
-- name: Deploy containers and services - docker-compose (pi1)
-  ansible.builtin.command:
-    cmd: "docker-compose up -d"
-    chdir: /home/pi/rpi-media-server/monitoring
-  register: docker_compose_output
-  changed_when: docker_compose_output.stdout != ''
-  failed_when: docker_compose_output.stdout != ''
-  when: inventory_hostname == 'pi1'
 
 - name: Display output
   ansible.builtin.debug:
     var: docker_compose_output
-

@@ -25,4 +25,3 @@
     - name: Include Docker Deployment Tasks
       ansible.builtin.include_tasks: deploy_docker_containers.yaml
       when: deploy_docker_containers | bool
-
