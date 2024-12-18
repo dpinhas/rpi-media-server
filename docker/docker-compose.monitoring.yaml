@@ -85,6 +85,8 @@ services:
     container_name: cadvisor
     command:
       - "--docker_only=true"
+      - "/etc/machine-id:/etc/machine-id:ro"
+      - "/var/lib/dbus/machine-id:/var/lib/dbus/machine-id:ro"
       - "--housekeeping_interval=30s"
       - "--disable_metrics=accelerator,cpu_topology,disk,memory_numa,tcp,udp,percpu,sched,process,hugetlb,referenced_memory,resctrl,cpuset,advtcp,memory_numa"
     restart: unless-stopped
