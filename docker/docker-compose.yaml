@@ -1,7 +1,0 @@
-networks:
-  pi0_network:
-    driver: bridge
-
-include:
-  - path: 'media.yaml'
-  - path: 'services.yaml'
