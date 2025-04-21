@@ -17,8 +17,12 @@ case "$HOST" in
     ;;
 esac
 
-echo "✅ Running on $HOST"
-echo "📦 Using $COMPOSE_FILE"
-echo "🧪 Using $ENV_FILE"
+GREEN='\033[1;32m'
+CYAN='\033[1;36m'
+RESET='\033[0m'
+
+printf "${GREEN}%-15s${CYAN}%-30s${RESET}\n" "Hostname:" "$(hostname)"
+printf "${GREEN}%-15s${CYAN}%-30s${RESET}\n" "Compose File:" "${COMPOSE_FILE}"
+printf "${GREEN}%-15s${CYAN}%-30s${RESET}\n" "Env File:" "${ENV_FILE}"
 
 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" "$@"
