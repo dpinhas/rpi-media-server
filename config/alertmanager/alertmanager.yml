@@ -1,0 +1,23 @@
+global:
+  resolve_timeout: 5m
+  telegram_api_url: https://api.telegram.org
+
+route:
+  receiver: 'telegram-notifications'
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 3h
+
+receivers:
+  - name: 'telegram-notifications'
+    telegram_configs:
+      - bot_token: '8091837058:AAGIsTV3kNFenzxEezCiBG3kZPaf7VoDkUk'
+        chat_id: -4785371854
+        parse_mode: 'Markdown'
+        message: |
+          *🔥 Alert: {{ .CommonLabels.alertname }}*
+          *Status:* {{ .Status }}
+          *Instance:* {{ .CommonLabels.instance }}
+          *Summary:* {{ .CommonAnnotations.summary }}
+          *Description:* {{ .CommonAnnotations.description }}
+
