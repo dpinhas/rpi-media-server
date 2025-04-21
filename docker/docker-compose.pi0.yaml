@@ -229,3 +229,7 @@ services:
       - "traefik.http.services.jellyseerr.loadbalancer.server.port=5055"
     networks:
       - pi0_network
+
+networks:
+  pi0_network:
+    driver: bridge
