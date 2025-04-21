@@ -1,5 +1,44 @@
 ---
 services:
+  traefik:
+    image: traefik:${TRAEFIK_TAG}
+    container_name: traefik
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${PWD}/../config/traefik:/etc/traefik
+    environment:
+      - DUCKDNS_TOKEN=${DUCKDNS_TOKEN}
+    labels:
+      - "traefik.enable=true"
+
+  portainer:
+    image: portainer/portainer-ce:${PORTAINER_TAG}
+    container_name: portainer
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ${DATA_PATH}/config/portainer:/data
+    ports:
+      - "9000:9000"
+
+  tailscale:
+    image: tailscale/tailscale:${TAILSCALE_TAG}
+    container_name: tailscale
+    network_mode: "host"
+    privileged: true
+    environment:
+      - TS_AUTH_KEY=${TS_AUTH_KEY}
+      - TS_ROUTES=${TS_ROUTES}
+      - TS_HOSTNAME=${TAILSCALE_HOSTNAME}
+    volumes:
+      - /var/lib:/var/lib
+      - /dev/net/tun:/dev/net/tun
+
   sonarr:
     image: ghcr.io/linuxserver/sonarr:${SONARR_TAG}
     container_name: sonarr
@@ -189,3 +228,7 @@ services:
       - "traefik.http.services.jellyseerr.loadbalancer.server.port=5055"
     networks:
       - pi0_network
+
+networks:
+  pi0_network:
+    driver: bridge
