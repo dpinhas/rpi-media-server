@@ -105,9 +105,9 @@ services:
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
 
-  ping_exporter:
+  ping-exporter:
     image: czerwonk/ping_exporter:${PING_EXPORTER_TAG}
-    container_name: ping_exporter
+    container_name: ping-exporter
     restart: unless-stopped
     ports:
       - "${PING_EXPORTER_PORT}:9427"

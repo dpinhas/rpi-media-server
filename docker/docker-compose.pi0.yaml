@@ -3,19 +3,84 @@ services:
   traefik:
     image: traefik:${TRAEFIK_TAG}
     container_name: traefik
-    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${DATA_PATH}/config/letsencrypt:/letsencrypt
+      - ${PWD}/../config/traefik/dynamic.yaml:/etc/traefik/dynamic.yaml
     ports:
       - "80:80"
-      - "443:443"
       - "8080:8080"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ${PWD}/../config/traefik:/etc/traefik
+      - "443:443"
+    restart: unless-stopped
+    command:
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--log.level=INFO"
+      - "--metrics.prometheus=true"
+      - "--metrics.prometheus.buckets=0.1,0.3,1.2,5.0"
+      - "--entryPoints.metrics.address=:8083"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.filename=/etc/traefik/dynamic.yaml"
+      # Entrypoints
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entryPoint.to=web-secure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.web-secure.address=:443"
+      - "--entrypoints.web-secure.http.tls.certResolver=myresolver"
+      - "--entrypoints.web-secure.http.tls.domains[0].main=${TRAEFIK_DOMAIN}"
+      - "--entrypoints.web-secure.http.tls.domains[1].main=*.${TRAEFIK_DOMAIN}"
+      # Lets-encrypt
+      - "--certificatesresolvers.myresolver.acme.email=${ACME_EMAIL}"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.disablepropagationcheck=true"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.provider=duckdns"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.delaybeforecheck=10"
+      - "--certificatesresolvers.myresolver.acme.dnschallenge.resolvers=1.1.1.1:53,1.0.0.1:53"
+    
     environment:
       - DUCKDNS_TOKEN=${DUCKDNS_TOKEN}
     labels:
       - "traefik.enable=true"
+      - "traefik.http.routers.traefik-ui.rule=Host(`${TRAEFIK_UI_HOST}`)"
+      - "traefik.http.routers.traefik-ui.entrypoints=web-secure"
+      - "traefik.http.services.traefik-ui.loadbalancer.server.port=8080"
+    networks:
+      - pi0_network
 
+  adguardhome:
+    image: adguard/adguardhome:${ADGUARD_TAG}
+    container_name: adguardhome
+    volumes:
+      - ${DATA_PATH}/config/adguard_home/workdir:/opt/adguardhome/work
+      - ${DATA_PATH}/config/adguard_home/confdir:/opt/adguardhome/conf
+    ports:
+      - 3000:3000/tcp
+      - 53:53/tcp
+      - 53:53/udp
+      - 8082:8082/tcp
+      - 8443:443/tcp
+      - 443:443/udp
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.adguard.rule=Host(`${ADGUARD_HOST}`)"
+      - "traefik.http.routers.adguard.entrypoints=web-secure"
+      - "traefik.http.services.adguard.loadbalancer.server.port=8082"
+    networks:
+      - pi0_network
+  
+  flaresolverr:
+    image: nexter92/flaresolverr:${FLARESOLVERR_TAG}
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=${FLARESOLVERR_LOG_LEVEL}
+    ports:
+      - 8191:8191
+    restart: unless-stopped
+    networks:
+      - pi0_network
+  
   portainer:
     image: portainer/portainer-ce:${PORTAINER_TAG}
     container_name: portainer
@@ -25,19 +90,66 @@ services:
       - ${DATA_PATH}/config/portainer:/data
     ports:
       - "9000:9000"
-
+    networks:
+      - pi0_network
+  
   tailscale:
-    image: tailscale/tailscale:${TAILSCALE_TAG}
+    privileged: true
+    hostname: ${TAILSCALE_HOSTNAME}
     container_name: tailscale
     network_mode: "host"
-    privileged: true
+    image: tailscale/tailscale:${TAILSCALE_TAG}
+    volumes:
+      - "${DATA_PATH}/config/tailscale:/var/lib"
+      - "/dev/net/tun:/dev/net/tun"
+    cap_add:
+      - net_admin
+      - sys_module
     environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TS_USERSPACE=true
       - TS_AUTH_KEY=${TS_AUTH_KEY}
       - TS_ROUTES=${TS_ROUTES}
-      - TS_HOSTNAME=${TAILSCALE_HOSTNAME}
+    command:
+      - "tailscaled"
+    restart: unless-stopped
+
+  node-exporter:
+    image: prom/node-exporter:${NODE_EXPORTER_TAG}
+    container_name: node-exporter
     volumes:
-      - /var/lib:/var/lib
-      - /dev/net/tun:/dev/net/tun
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+      - /mnt/data:/mnt/data:ro
+      - ${PWD}/../config/custom_metrics/:/custom_metrics
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.textfile.directory=/custom_metrics/'
+      - '--collector.tcpstat'
+    restart: unless-stopped
+    ports:
+      - "${NODE_EXPORTER_PORT}:9100"
+    networks:
+      - pi0_network
+
+  cadvisor:
+    image: zcube/cadvisor:${CADVISOR_TAG}
+    container_name: cadvisor
+    restart: unless-stopped
+    ports:
+      - "${CADVISOR_PORT}:8080"
+    command:
+      - "--docker_only=true"
+      - "--housekeeping_interval=30s"
+      - "--disable_metrics=accelerator,cpu_topology,disk,memory_numa,tcp,udp,percpu,sched,process,hugetlb,referenced_memory,resctrl,cpuset,advtcp,memory_numa"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run/docker.sock:/var/run/docker.sock:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
 
   sonarr:
     image: ghcr.io/linuxserver/sonarr:${SONARR_TAG}
@@ -61,7 +173,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.sonarr.rule=Host(`${SONARR_HOST}`)"
       - "traefik.http.routers.sonarr.entrypoints=web-secure"
-      - "traefik.http.routers.sonarr.tls.certresolver=myresolver"
       - "traefik.http.services.sonarr.loadbalancer.server.port=8989"
     networks:
       - pi0_network
@@ -88,7 +199,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.radarr.rule=Host(`${RADARR_HOST}`)"
       - "traefik.http.routers.radarr.entrypoints=web-secure"
-      - "traefik.http.routers.radarr.tls.certresolver=myresolver"
       - "traefik.http.services.radarr.loadbalancer.server.port=7878"
     networks:
       - pi0_network
@@ -116,7 +226,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.jackett.rule=Host(`${JACKETT_HOST}`)"
       - "traefik.http.routers.jackett.entrypoints=web-secure"
-      - "traefik.http.routers.jackett.tls.certresolver=myresolver"
       - "traefik.http.services.jackett.loadbalancer.server.port=9117"
     networks:
       - pi0_network
@@ -146,7 +255,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.transmission.rule=Host(`${TRANSMISSION_HOST}`)"
       - "traefik.http.routers.transmission.entrypoints=web-secure"
-      - "traefik.http.routers.transmission.tls.certresolver=myresolver"
       - "traefik.http.services.transmission.loadbalancer.server.port=9091"
     networks:
       - pi0_network
@@ -168,7 +276,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.bazarr.rule=Host(`${BAZARR_HOST}`)"
       - "traefik.http.routers.bazarr.entrypoints=web-secure"
-      - "traefik.http.routers.bazarr.tls.certresolver=myresolver"
       - "traefik.http.services.bazarr.loadbalancer.server.port=6767"
     networks:
       - pi0_network
@@ -192,18 +299,10 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-
       - "traefik.http.routers.jellyfin.rule=Host(`${JELLYFIN_HOST}`)"
       - "traefik.http.routers.jellyfin.entrypoints=web-secure"
-      - "traefik.http.routers.jellyfin.tls.certresolver=myresolver"
       - "traefik.http.routers.jellyfin.service=jellyfin"
       - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
-
-      - "traefik.http.routers.jellyfin-pub.rule=Host(`${JELLYFIN_PUB_HOST}`)"
-      - "traefik.http.routers.jellyfin-pub.entrypoints=web-secure"
-      - "traefik.http.routers.jellyfin-pub.tls.certresolver=myresolver"
-      - "traefik.http.routers.jellyfin-pub.service=jellyfin-public"
-      - "traefik.http.services.jellyfin-public.loadbalancer.server.port=8096"
     networks:
       - pi0_network
 
@@ -224,7 +323,6 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.jellyseerr.rule=Host(`${JELLYSEERR_HOST}`)"
       - "traefik.http.routers.jellyseerr.entrypoints=web-secure"
-      - "traefik.http.routers.jellyseerr.tls.certresolver=myresolver"
       - "traefik.http.services.jellyseerr.loadbalancer.server.port=5055"
     networks:
       - pi0_network
