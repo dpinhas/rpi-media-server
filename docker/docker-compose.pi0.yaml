@@ -37,7 +37,7 @@ services:
       - "--certificatesresolvers.myresolver.acme.dnschallenge.provider=duckdns"
       - "--certificatesresolvers.myresolver.acme.dnschallenge.delaybeforecheck=10"
       - "--certificatesresolvers.myresolver.acme.dnschallenge.resolvers=1.1.1.1:53,1.0.0.1:53"
-    
+
     environment:
       - DUCKDNS_TOKEN=${DUCKDNS_TOKEN}
     labels:
@@ -69,7 +69,7 @@ services:
       - "traefik.http.services.adguard.loadbalancer.server.port=8082"
     networks:
       - pi0_network
-  
+
   flaresolverr:
     image: nexter92/flaresolverr:${FLARESOLVERR_TAG}
     container_name: flaresolverr
@@ -80,7 +80,7 @@ services:
     restart: unless-stopped
     networks:
       - pi0_network
-  
+
   portainer:
     image: portainer/portainer-ce:${PORTAINER_TAG}
     container_name: portainer
@@ -92,7 +92,7 @@ services:
       - "9000:9000"
     networks:
       - pi0_network
-  
+
   tailscale:
     privileged: true
     hostname: ${TAILSCALE_HOSTNAME}
