@@ -28,16 +28,16 @@ http:
     grafana:
       loadBalancer:
         servers:
-          - url: "http://192.168.31.11:3000"
+          - url: "http://192.168.68.11:3000"
     prometheus:
       loadBalancer:
         servers:
-          - url: "http://192.168.31.11:9090"
+          - url: "http://192.168.68.11:9090"
     blackbox:
       loadBalancer:
         servers:
-          - url: "http://192.168.31.11:9115"
+          - url: "http://192.168.68.11:9115"
     homebridge:
       loadBalancer:
         servers:
-          - url: "http://192.168.31.11:8581"
+          - url: "http://192.168.68.11:8581"
