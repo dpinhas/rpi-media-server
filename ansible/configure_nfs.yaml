@@ -26,7 +26,7 @@
     path: /etc/exports
     line: "{{ item }}"
   loop:
-    - "/mnt/data/       192.168.31.0/24(rw,sync,no_subtree_check)"
+    - "/mnt/data/       192.168.68.0/24(rw,sync,no_subtree_check)"
 
 - name: Start nfs-server
   ansible.builtin.service:
