@@ -3,3 +3,5 @@ data/
 ddns.log
 last_update.prom
 config/custom_metrics/*
+.env.private
+.env.combined
