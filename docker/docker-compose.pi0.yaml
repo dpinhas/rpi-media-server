@@ -97,7 +97,6 @@ services:
     privileged: true
     hostname: ${TAILSCALE_HOSTNAME}
     container_name: tailscale
-    network_mode: "host"
     image: tailscale/tailscale:${TAILSCALE_TAG}
     volumes:
       - "${DATA_PATH}/config/tailscale:/var/lib"
@@ -112,8 +111,12 @@ services:
       - TS_AUTH_KEY=${TS_AUTH_KEY}
       - TS_ROUTES=${TS_ROUTES}
     command:
-      - "tailscaled"
+      - sh
+      - -c
+      - "tailscaled & sleep 2 && tailscale up --authkey=${TS_AUTH_KEY} --advertise-routes=${TS_ROUTES} && sleep infinity"
     restart: unless-stopped
+    networks:
+      - pi0_network
 
   node-exporter:
     image: prom/node-exporter:${NODE_EXPORTER_TAG}
