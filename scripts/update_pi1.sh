@@ -13,7 +13,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-PI1_HOST="pi1"
+PI1_HOST="192.168.68.11"
 PI1_USER="pi"
 REPO_PATH="/home/pi/rpi-media-server"
 BRANCH="${1:-main}"  # Default to main branch if no argument provided
@@ -38,7 +38,7 @@ print_error() {
 # Function to check if we can connect to pi1
 check_connection() {
     print_status "Checking connection to $PI1_HOST..."
-    if ! ssh -o ConnectTimeout=10 -o BatchMode=yes "$PI1_USER@$PI1_HOST" "echo 'Connection successful'" >/dev/null 2>&1; then
+    if ! ssh -i ~/.ssh/personal/id_ecdsa -o ConnectTimeout=10 -o BatchMode=yes "$PI1_USER@$PI1_HOST" "echo 'Connection successful'" >/dev/null 2>&1; then
         print_error "Cannot connect to $PI1_HOST. Please check:"
         print_error "1. SSH key is set up for passwordless access"
         print_error "2. $PI1_HOST is reachable on the network"

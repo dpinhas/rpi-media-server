@@ -5,3 +5,5 @@ last_update.prom
 config/custom_metrics/*
 .env.private
 .env.combined
+config/zigbee2mqtt/log/
+config/zigbee2mqtt/database.db

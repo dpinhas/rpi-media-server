@@ -1,0 +1,61 @@
+version: 4
+mqtt:
+  base_topic: zigbee2mqtt
+  server: mqtt://mosquitto:1883
+serial:
+  port: /dev/ttyUSB0
+  adapter: ember
+  baudrate: 115200
+  rtscts: false
+advanced:
+  log_level: info
+  channel: 11
+  network_key:
+    - 87
+    - 135
+    - 79
+    - 12
+    - 19
+    - 41
+    - 207
+    - 195
+    - 25
+    - 87
+    - 34
+    - 159
+    - 35
+    - 151
+    - 148
+    - 54
+  pan_id: 36145
+  ext_pan_id:
+    - 78
+    - 77
+    - 209
+    - 157
+    - 106
+    - 174
+    - 252
+    - 123
+frontend:
+  enabled: true
+  port: 8080
+homeassistant:
+  enabled: true
+devices:
+  '0x7cc6b6fffec06b7a':
+    friendly_name: Kitchen Table Light
+  '0x7cc6b6fffec082fd':
+    friendly_name: Kitchen Spots
+  '0xa4c138a09c29c92e':
+    friendly_name: Heater
+  '0xa4c138ec4540bc6a':
+    friendly_name: Bedroom Blind
+  '0xa4c138128db00e77':
+    friendly_name: 2nd Bedroom Blind
+  '0x7cc6b6fffec07514':
+    friendly_name: Kitchen Gang switch
+  '0xa4c138b79c8d6306':
+    friendly_name: Kitchen Blind
+  '0xa4c138d37738cfa1':
+    friendly_name: Living Room Blind
