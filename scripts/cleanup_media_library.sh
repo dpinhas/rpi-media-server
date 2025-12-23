@@ -6,12 +6,17 @@ function contains_video_files {
     find "$dir" -type f \( -name "*.mkv" -o -name "*.mp4" \) -print -quit | grep -q .
 }
 
-# Function to remove directories without .mkv or .mp4 files
+# Function to remove directories without .mkv or .mp4 files, excluding /mnt/data/library/downloads
 function remove_empty_directories {
     local parent_dir="$1"
     local dry_run="$2"
+    local exclude_dir="/mnt/data/library/downloads"
 
     while IFS= read -r -d '' dir; do
+        # Skip the excluded directory and its subdirectories
+        if [[ "$dir" == "$exclude_dir"* ]]; then
+            continue
+        fi
         if ! contains_video_files "$dir"; then
             if [ "$dry_run" == "true" ]; then
                 echo "Would remove directory: $dir"
@@ -57,3 +62,4 @@ remove_empty_directories "$parent_directory" "$dry_run"
 if [ "$dry_run" == "true" ]; then
     echo "Dry run complete. No directories were deleted."
 fi
+

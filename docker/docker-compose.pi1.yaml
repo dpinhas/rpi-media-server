@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     volumes:
       - ${PWD}/../config/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ${PWD}/../config/alert_rules.yml:/etc/prometheus/alert_rules.yml
+      - ${PWD}/../config/alertmanager/alert_rules.yml:/etc/prometheus/alert_rules.yml
       - ${DATA_PATH}/config/prometheus/data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'

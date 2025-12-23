@@ -5,7 +5,7 @@ global:
     monitor: 'my-project'
 
 rule_files:
-  - "alert_rules.yml"
+  - "alertmanager/alert_rules.yml"
 
 alerting:
   alertmanagers:
@@ -30,6 +30,18 @@ scrape_configs:
         regex: "ping_loss_ratio"
         target_label: __name__
         replacement: "ping_loss_percent"
+
+  - job_name: 'sonarr-exporter'
+    static_configs:
+      - targets: ['192.168.68.10:9707']
+
+  - job_name: 'radarr-exporter'
+    static_configs:
+      - targets: ['192.168.68.10:9708']
+
+  - job_name: 'bazarr-exporter'
+    static_configs:
+      - targets: ['192.168.68.10:9712']
 
   - job_name: 'cadvisor'
     static_configs:

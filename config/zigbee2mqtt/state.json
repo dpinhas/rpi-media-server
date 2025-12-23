@@ -1,0 +1,78 @@
+{
+    "0x7cc6b6fffec06b7a": {
+        "state": "OFF",
+        "power_on_behavior": "previous",
+        "linkquality": 160
+    },
+    "0x7cc6b6fffec082fd": {
+        "state": "ON",
+        "power_on_behavior": "previous",
+        "linkquality": 172
+    },
+    "0xa4c138a09c29c92e": {
+        "state": "OFF",
+        "power_on_behavior": "previous",
+        "linkquality": 156
+    },
+    "0xa4c138ec4540bc6a": {
+        "indicator_mode": "off",
+        "backlight_mode": "ON",
+        "position": 32,
+        "state": "OPEN",
+        "moving": "STOP",
+        "calibration": "OFF",
+        "motor_reversal": "OFF",
+        "calibration_time": 10,
+        "linkquality": 160
+    },
+    "0xa4c138128db00e77": {
+        "indicator_mode": "off",
+        "backlight_mode": "ON",
+        "position": 100,
+        "state": "OPEN",
+        "moving": "STOP",
+        "calibration": "OFF",
+        "motor_reversal": "OFF",
+        "calibration_time": 120,
+        "linkquality": 200
+    },
+    "0x7cc6b6fffec07514": {
+        "state_l1": "OFF",
+        "countdown_l1": 0,
+        "backlight_mode": "ON",
+        "indicator_mode": "off/on",
+        "power_on_behavior_l1": "previous",
+        "state_l2": "OFF",
+        "countdown_l2": 0,
+        "power_on_behavior_l2": "previous",
+        "inching_control_set": {
+            "inching_control_1": "DISABLE",
+            "inching_time_1": 0,
+            "inching_control_2": "DISABLE",
+            "inching_time_2": 0
+        },
+        "linkquality": 176
+    },
+    "0xa4c138b79c8d6306": {
+        "indicator_mode": "off",
+        "backlight_mode": "ON",
+        "position": 32,
+        "state": "OPEN",
+        "moving": "STOP",
+        "calibration": "OFF",
+        "motor_reversal": "OFF",
+        "calibration_time": 10,
+        "linkquality": 196
+    },
+    "0xa4c138d37738cfa1": {
+        "indicator_mode": "off",
+        "backlight_mode": "ON",
+        "position": 53,
+        "state": "OPEN",
+        "moving": "STOP",
+        "calibration": "OFF",
+        "motor_reversal": "OFF",
+        "calibration_time": 10,
+        "linkquality": 192
+    }
+}

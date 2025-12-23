@@ -18,9 +18,9 @@ http:
       entrypoints:
         - "web-secure"
 
-    homebridge:
-      rule: "Host(`homebridge.dpinhas.duckdns.org`)"
-      service: homebridge
+    homeassistant:
+      rule: "Host(`ha.dpinhas.duckdns.org`)"
+      service: homeassistant
       entrypoints:
         - "web-secure"
 
@@ -37,7 +37,7 @@ http:
       loadBalancer:
         servers:
           - url: "http://192.168.68.11:9115"
-    homebridge:
+    homeassistant:
       loadBalancer:
         servers:
-          - url: "http://192.168.68.11:8581"
+          - url: "http://192.168.68.10:8123"
