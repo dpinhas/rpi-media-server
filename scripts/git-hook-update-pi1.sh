@@ -163,9 +163,8 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         *)
-            print_error "Unknown option: $1"
-            show_help
-            exit 1
+            # Ignore unrecognized arguments (e.g. when called as a git hook)
+            shift
             ;;
     esac
 done

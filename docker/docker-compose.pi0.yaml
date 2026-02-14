@@ -60,7 +60,6 @@ services:
       - 53:53/udp
       - 8082:8082/tcp
       - 8443:443/tcp
-      - 443:443/udp
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
@@ -144,15 +143,22 @@ services:
     restart: unless-stopped
     ports:
       - "${CADVISOR_PORT}:8080"
+    environment:
+      - IGNORE_MOUNTED_HOUSEKEEPING=true
     command:
       - "--docker_only=true"
       - "--housekeeping_interval=30s"
       - "--disable_metrics=accelerator,cpu_topology,disk,memory_numa,tcp,udp,percpu,sched,process,hugetlb,referenced_memory,resctrl,cpuset,advtcp,memory_numa"
     volumes:
+      - /etc/machine-id:/etc/machine-id:ro
+      - /etc/os-release:/etc/os-release:ro
+      - /var/log:/var/log:ro
       - /:/rootfs:ro
       - /var/run/docker.sock:/var/run/docker.sock:rw
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - pi0_network
 
   sonarr:
     image: ghcr.io/linuxserver/sonarr:${SONARR_TAG}
@@ -315,7 +321,7 @@ services:
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
-      - LOG_LEVEL=debug
+      - LOG_LEVEL=info
       - TZ=${TIMEZONE}
     ports:
       - 5055:5055
@@ -331,42 +337,50 @@ services:
       - pi0_network
 
   sonarr-exporter:
-    image: ghcr.io/onedr0p/exportarr
+    image: ghcr.io/onedr0p/exportarr:v2.0
     container_name: sonarr-exporter
     command: ["sonarr"]
     environment:
       PORT: 9707
       URL: "http://sonarr:8989"
-      APIKEY: "20891f4492c140fd85cfa92d3ea17e0f"
+      APIKEY: "${SONARR_API_KEY}"
     ports:
       - "9707:9707"
     restart: unless-stopped
+    depends_on:
+      - sonarr
     networks:
       - pi0_network
 
   radarr-exporter:
-    image: ghcr.io/onedr0p/exportarr
+    image: ghcr.io/onedr0p/exportarr:v2.0
     container_name: radarr-exporter
     command: ["radarr"]
     environment:
       PORT: 9708
       URL: "http://radarr:7878"
-      APIKEY: "aa6a94f06a584737a7d1ea20db41d240"
+      APIKEY: "${RADARR_API_KEY}"
     ports:
       - "9708:9708"
     restart: unless-stopped
+    depends_on:
+      - radarr
     networks:
       - pi0_network
+
   bazarr-exporter:
-    image: ghcr.io/onedr0p/exportarr
+    image: ghcr.io/onedr0p/exportarr:v2.0
     container_name: bazarr-exporter
     command: ["bazarr"]
     environment:
       PORT: 9712
       URL: "http://bazarr:6767"
-      APIKEY: "807056a63e821e5411d88935c1ffa441"
+      APIKEY: "${BAZARR_API_KEY}"
     ports:
       - "9712:9712"
+    restart: unless-stopped
+    depends_on:
+      - bazarr
     networks:
       - pi0_network
   homeassistant:
@@ -380,16 +394,13 @@ services:
     privileged: true
     environment:
       - TZ=${TIMEZONE}
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.homeassistant.rule=Host(`${HOMEASSISTANT_HOST}`)"
-      - "traefik.http.routers.homeassistant.entrypoints=web-secure"
-      - "traefik.http.services.homeassistant.loadbalancer.server.port=8123"
+    # Note: Traefik routes to HA via dynamic.yaml (IP-based) since network_mode: host
+    # is incompatible with Docker provider label-based routing.
     network_mode: host
 
   zigbee2mqtt:
       container_name: zigbee2mqtt
-      image: ghcr.io/koenkk/zigbee2mqtt
+      image: ghcr.io/koenkk/zigbee2mqtt:${ZIGBEE2MQTT_TAG}
       restart: unless-stopped
       volumes:
           - ${PWD}/../config/zigbee2mqtt:/app/data
@@ -397,14 +408,16 @@ services:
       ports:
           - 8083:8080
       environment:
-          - TZ=Europe/Berlin
+          - TZ=${TIMEZONE}
       devices:
           - /dev/serial/by-id/usb-1a86_USB_Serial-if00-port0:/dev/ttyUSB0
+      depends_on:
+          - mosquitto
       networks:
           - pi0_network
 
   mosquitto:
-    image: eclipse-mosquitto:latest
+    image: eclipse-mosquitto:${MOSQUITTO_TAG}
     container_name: mosquitto
     restart: unless-stopped
     ports:

@@ -5,5 +5,8 @@ last_update.prom
 config/custom_metrics/*
 .env.private
 .env.combined
+config/alertmanager/alertmanager.yml
 config/zigbee2mqtt/log/
 config/zigbee2mqtt/database.db
+config/zigbee2mqtt/state.json
+config/zigbee2mqtt/coordinator_backup.json
