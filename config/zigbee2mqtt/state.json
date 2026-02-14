@@ -5,7 +5,7 @@
         "linkquality": 160
     },
     "0x7cc6b6fffec082fd": {
-        "state": "ON",
+        "state": "OFF",
         "power_on_behavior": "previous",
         "linkquality": 172
     },
@@ -42,7 +42,7 @@
         "backlight_mode": "ON",
         "indicator_mode": "off/on",
         "power_on_behavior_l1": "previous",
-        "state_l2": "OFF",
+        "state_l2": "ON",
         "countdown_l2": 0,
         "power_on_behavior_l2": "previous",
         "inching_control_set": {

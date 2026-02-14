@@ -3,18 +3,20 @@
 # Variables
 DOCKER_COMPOSE_DIR=$(PWD)/docker
 HOSTNAME=$(shell hostname)
-DOCKER_COMPOSE_FILE=docker-compose.yaml
-ENV_FILE=.env
+DOCKER_COMPOSE_FILE=docker-compose.pi0.yaml
+ENV_FILE=.env.combined
 SHELL := /bin/bash
 
 # Conditional for hostname
 ifeq ($(HOSTNAME), pi1)
-	DOCKER_COMPOSE_FILE=docker-compose.monitoring.yaml
+	DOCKER_COMPOSE_FILE=docker-compose.pi1.yaml
 endif
 
 # Define functions
 define run_docker_compose
-	cd $(DOCKER_COMPOSE_DIR) && docker compose -f $(DOCKER_COMPOSE_FILE) --env-file $(ENV_FILE) $(1)
+	cd $(DOCKER_COMPOSE_DIR) && \
+	cat .env .env.private > .env.combined 2>/dev/null; \
+	docker compose -f $(DOCKER_COMPOSE_FILE) --env-file $(ENV_FILE) $(1)
 endef
 
 define check_service_cmd
