@@ -1,0 +1,180 @@
+title: Home
+
+views:
+  - title: Home
+    path: home
+    icon: mdi:home
+    type: sections
+    max_columns: 3
+    sections:
+      - title: All Blinds
+        type: grid
+        cards:
+          - type: heading
+            heading: Blinds
+            heading_style: title
+            icon: mdi:blinds
+          - type: tile
+            entity: cover.bedroom_blind_2
+            name: Bedroom
+            features:
+              - type: cover-open-close
+              - type: cover-position
+          - type: tile
+            entity: cover.2nd_bedroom_blind_3
+            name: 2nd Bedroom
+            features:
+              - type: cover-open-close
+              - type: cover-position
+          - type: tile
+            entity: cover.kitchen_blind_3
+            name: Kitchen
+            features:
+              - type: cover-open-close
+              - type: cover-position
+          - type: tile
+            entity: cover.living_room_blind_2
+            name: Living Room
+            features:
+              - type: cover-open-close
+              - type: cover-position
+          - type: heading
+            heading: Scenes
+            heading_style: subtitle
+            icon: mdi:palette
+          - type: tile
+            entity: scene.all_blinds_open
+            name: All Open
+            icon: mdi:blinds-open
+            color: green
+          - type: tile
+            entity: scene.all_blinds_closed
+            name: All Closed
+            icon: mdi:blinds
+            color: red
+          - type: tile
+            entity: scene.morning_blinds
+            name: Morning
+            icon: mdi:weather-sunny
+            color: amber
+
+      - title: Lights
+        type: grid
+        cards:
+          - type: heading
+            heading: Lights
+            heading_style: title
+            icon: mdi:lightbulb-group
+          - type: tile
+            entity: switch.kitchen_gang_switch_l1
+            name: Living Room Light
+            icon: mdi:ceiling-light
+          - type: tile
+            entity: switch.kitchen_gang_switch_l2
+            name: Kitchen Island
+            icon: mdi:ceiling-light
+          - type: tile
+            entity: switch.kitchen_spots
+            name: Kitchen Spots
+            icon: mdi:spotlight-beam
+          - type: tile
+            entity: switch.kitchen_table_light
+            name: Kitchen Table
+            icon: mdi:lamp
+
+      - title: Status
+        type: grid
+        cards:
+          - type: heading
+            heading: Status
+            heading_style: title
+            icon: mdi:information
+          - type: tile
+            entity: person.dor
+            name: Dor
+          - type: tile
+            entity: sensor.dors_iphone_battery_level
+            name: iPhone Battery
+            icon: mdi:cellphone
+          - type: tile
+            entity: sensor.sun_next_setting
+            name: Sunset
+            icon: mdi:weather-sunset-down
+
+  - title: Rooms
+    path: rooms
+    icon: mdi:floor-plan
+    type: sections
+    max_columns: 2
+    sections:
+      - title: Kitchen
+        type: grid
+        cards:
+          - type: heading
+            heading: Kitchen
+            heading_style: title
+            icon: mdi:fridge
+          - type: tile
+            entity: cover.kitchen_blind_3
+            name: Blind
+            features:
+              - type: cover-open-close
+              - type: cover-position
+          - type: tile
+            entity: switch.kitchen_gang_switch_l2
+            name: Island Light
+            icon: mdi:ceiling-light
+          - type: tile
+            entity: switch.kitchen_spots
+            name: Spots
+            icon: mdi:spotlight-beam
+          - type: tile
+            entity: switch.kitchen_table_light
+            name: Table Light
+            icon: mdi:lamp
+
+      - title: Living Room
+        type: grid
+        cards:
+          - type: heading
+            heading: Living Room
+            heading_style: title
+            icon: mdi:sofa
+          - type: tile
+            entity: cover.living_room_blind_2
+            name: Blind
+            features:
+              - type: cover-open-close
+              - type: cover-position
+          - type: tile
+            entity: switch.kitchen_gang_switch_l1
+            name: Light
+            icon: mdi:ceiling-light
+
+      - title: Bedroom
+        type: grid
+        cards:
+          - type: heading
+            heading: Bedroom
+            heading_style: title
+            icon: mdi:bed-king-outline
+          - type: tile
+            entity: cover.bedroom_blind_2
+            name: Blind
+            features:
+              - type: cover-open-close
+              - type: cover-position
+
+      - title: 2nd Bedroom
+        type: grid
+        cards:
+          - type: heading
+            heading: 2nd Bedroom
+            heading_style: title
+            icon: mdi:bed-king-outline
+          - type: tile
+            entity: cover.2nd_bedroom_blind_3
+            name: Blind
+            features:
+              - type: cover-open-close
+              - type: cover-position
