@@ -8,5 +8,7 @@ config/custom_metrics/*
 config/alertmanager/alertmanager.yml
 config/zigbee2mqtt/log/
 config/zigbee2mqtt/database.db
+config/zigbee2mqtt/database.db.tmp.*
 config/zigbee2mqtt/state.json
 config/zigbee2mqtt/coordinator_backup.json
+*.db

@@ -1,0 +1,50 @@
+# ── Blind Scenes ──
+
+- id: blinds_all_open
+  name: All Blinds Open
+  icon: mdi:blinds-open
+  entities:
+    cover.bedroom_blind:
+      state: open
+      current_position: 100
+    cover.2nd_bedroom_blind:
+      state: open
+      current_position: 100
+    cover.kitchen_blind:
+      state: open
+      current_position: 100
+    cover.living_room_blind:
+      state: open
+      current_position: 100
+
+- id: blinds_all_closed
+  name: All Blinds Closed
+  icon: mdi:blinds
+  entities:
+    cover.bedroom_blind:
+      state: closed
+      current_position: 0
+    cover.2nd_bedroom_blind:
+      state: closed
+      current_position: 0
+    cover.kitchen_blind:
+      state: closed
+      current_position: 0
+    cover.living_room_blind:
+      state: closed
+      current_position: 0
+
+- id: blinds_morning
+  name: Morning Blinds
+  icon: mdi:weather-sunny
+  entities:
+    cover.2nd_bedroom_blind:
+      state: open
+      current_position: 100
+    cover.kitchen_blind:
+      state: open
+      current_position: 100
+    cover.living_room_blind:
+      state: open
+      current_position: 100
+
