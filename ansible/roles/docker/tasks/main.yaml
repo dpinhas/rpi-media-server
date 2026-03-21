@@ -1,0 +1,12 @@
+---
+- name: Install Docker
+  ansible.builtin.include_tasks: install.yaml
+  tags: [docker, install]
+
+- name: Clone repository
+  ansible.builtin.include_tasks: repo.yaml
+  tags: [docker, repo]
+
+- name: Deploy containers
+  ansible.builtin.include_tasks: deploy.yaml
+  tags: [docker, deploy]

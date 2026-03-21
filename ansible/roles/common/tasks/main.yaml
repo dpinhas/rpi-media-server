@@ -1,0 +1,88 @@
+---
+- name: Update repos and upgrade all packages
+  ansible.builtin.apt:
+    upgrade: true
+    update_cache: true
+    force_apt_get: true
+    cache_valid_time: 3600
+  tags: [packages]
+
+- name: Check if reboot is required
+  ansible.builtin.command: needrestart -b
+  register: reboot_required
+  changed_when: false
+  failed_when: false
+  tags: [system]
+
+- name: Reboot if required
+  ansible.builtin.reboot:
+    reboot_timeout: 120
+  when: "'NEEDRESTART-KSTA: 2' in reboot_required.stdout or 'NEEDRESTART-KSTA: 3' in reboot_required.stdout"
+  tags: [system, reboot]
+
+- name: Set hostname
+  ansible.builtin.shell: raspi-config nonint do_hostname {{ inventory_hostname }}
+  register: hostname_result
+  changed_when: hostname_result.rc == 0
+  tags: [system]
+
+- name: Set locale
+  ansible.builtin.shell: raspi-config nonint do_change_locale {{ pi_locale }}
+  register: locale_result
+  changed_when: locale_result.rc == 0
+  tags: [system]
+
+- name: Install common packages
+  ansible.builtin.apt:
+    name: "{{ common_packages }}"
+    state: present
+  tags: [packages]
+
+- name: Customize .bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ pi_home }}/.bashrc"
+    line: "alias ll='ls -lh --color --group-directories-first'"
+    create: true
+    owner: "{{ pi_user }}"
+  tags: [dotfiles]
+
+- name: Deploy .vimrc
+  ansible.builtin.template:
+    src: vimrc.j2
+    dest: "{{ pi_home }}/.vimrc"
+    owner: "{{ pi_user }}"
+    mode: "0644"
+  tags: [dotfiles]
+
+- name: Deploy .gitconfig
+  ansible.builtin.template:
+    src: gitconfig.j2
+    dest: "{{ pi_home }}/.gitconfig"
+    owner: "{{ pi_user }}"
+    mode: "0644"
+  tags: [dotfiles]
+
+- name: Deploy SSH client config
+  ansible.builtin.template:
+    src: ssh_config.j2
+    dest: "{{ pi_home }}/.ssh/config"
+    owner: "{{ pi_user }}"
+    mode: "0644"
+  tags: [dotfiles]
+
+- name: Create data directory
+  ansible.builtin.file:
+    path: "{{ data_path }}"
+    state: directory
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+  tags: [storage]
+
+- name: Add DATA_PATH to bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ pi_home }}/.bashrc"
+    line: "export DATA_PATH='{{ data_path }}/'"
+    state: present
+    create: true
+    insertafter: EOF
+  tags: [dotfiles]

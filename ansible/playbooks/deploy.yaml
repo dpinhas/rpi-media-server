@@ -1,0 +1,22 @@
+---
+# Usage:
+#   ansible-playbook playbooks/deploy.yaml -l pi0          # full deployment
+#   ansible-playbook playbooks/deploy.yaml -l pi0 --tags common   # OS setup only
+#   ansible-playbook playbooks/deploy.yaml -l pi0 --tags docker   # docker only
+#   ansible-playbook playbooks/deploy.yaml -l pi0 --tags nfs      # NFS only
+#   ansible-playbook playbooks/deploy.yaml -l pi0 --tags deploy   # redeploy containers
+
+- name: Raspberry Pi deployment
+  hosts: rpi
+  become: true
+  remote_user: pi
+
+  roles:
+    - role: common
+      tags: [common]
+
+    - role: nfs
+      tags: [nfs, storage]
+
+    - role: docker
+      tags: [docker]

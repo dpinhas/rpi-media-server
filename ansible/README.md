@@ -1,49 +1,78 @@
-# Raspberry Pi Setup and Deployment with Ansible
+# Ansible Deployment
 
-This repository contains Ansible playbooks and tasks for setting up and deploying a Raspberry Pi using best practices. It includes tasks for preparing the Pi, installing and deploying Docker containers, and configuring storage.
+Ansible roles and playbooks for setting up and deploying Raspberry Pi media server infrastructure.
+
+## Architecture
+
+- **pi0** — Storage server + media/home automation services (Docker Compose)
+- **pi1** — Monitoring stack (Prometheus, Grafana, Alertmanager)
 
 ## Prerequisites
 
-Before running the Ansible playbooks, ensure you have the following prerequisites:
-
 - Ansible installed on your local machine
-- SSH access to the Raspberry Pi(s) with the `pi` user
-
-## Getting Started
-
-1. Clone this repository to your local machine:
+- SSH key-based access to Pi hosts as `pi` user
+- Install Ansible collections:
 
 ```shell
-git clone git@github.com:dpinhas/rpi-media-server.git
-```
-
-2. Modify the inventory file `hosts` to include the IP addresses or hostnames of your Raspberry Pis under the `rpi` group.
-
-3. Customize the variables in `main.yaml` according to your requirements. You can specify the locale, data path, and other configuration options.
-
-4. Install requirements for it by running:
-
-```shell
+cd ansible
 ansible-galaxy install -r requirements.yaml
 ```
 
-5. Run the playbook:
+## Quick Start
+
+All commands run from the `ansible/` directory:
 
 ```shell
-ansible-playbook main.yaml -l pi0 -e perform_raspberry_pi_setup=true -e deploy_docker_containers=true
+cd ansible
+
+# Full deployment on pi0
+ansible-playbook playbooks/deploy.yaml -l pi0
+
+# OS setup only
+ansible-playbook playbooks/deploy.yaml -l pi0 --tags common
+
+# Docker deploy only
+ansible-playbook playbooks/deploy.yaml -l pi0 --tags docker
+
+# Redeploy containers only
+ansible-playbook playbooks/deploy.yaml -l pi0 --tags deploy
+
+# NFS only
+ansible-playbook playbooks/deploy.yaml -l pi0 --tags nfs
 ```
 
-This will execute the tasks to prepare the Raspberry Pi and install/deploy Docker containers based on your configuration.
+## Structure
 
-## Playbook Structure
+```
+ansible/
+├── ansible.cfg
+├── requirements.yaml
+├── inventory/
+│   ├── hosts.yaml
+│   ├── group_vars/
+│   │   ├── all.yaml
+│   │   └── storage_server.yaml
+│   └── host_vars/
+│       ├── pi0.yaml
+│       └── pi1.yaml
+├── roles/
+│   ├── common/          # OS packages, dotfiles, locale, data dir
+│   ├── docker/          # Docker install, repo clone, compose deploy
+│   └── nfs/             # SSD mount, NFS server/client (auto-detects role)
+└── playbooks/
+    └── deploy.yaml      # Single playbook, use --tags to scope
+```
 
-- `setup_raspberry_pi.yaml`: Prepares the Raspberry Pi by updating packages, installing dependencies, customizing shell and Vim settings, and configuring SSH.
+## Roles
 
-- `deploy_docker_containers.yaml`: Installs Docker, adds the `pi` user to the Docker group, clones a GitHub repository, deploys Docker containers, and sets up cron jobs.
+| Role | Description | Tags |
+|------|-------------|------|
+| `common` | System packages, dotfiles, locale, data directory | `common`, `packages`, `dotfiles`, `system`, `storage` |
+| `docker` | Docker installation, repo clone, container deployment | `docker`, `install`, `repo`, `deploy` |
+| `nfs` | SSD mount, NFS server exports or client mount (auto-detects) | `nfs`, `storage` |
 
-## Customization
+## Variables
 
-- Modify the variables in `setup_raspberry_pi.yaml` and `deploy_docker_containers.yaml` to adjust the configuration according to your needs.
+Global variables are in `inventory/group_vars/all.yaml`. Host-specific overrides go in `inventory/host_vars/<host>.yaml`.
 
-- Additional tasks and playbooks can be added as separate YAML files and included in the main playbook (`main.yaml`).
-
+Secrets (Tailscale keys, API keys, DuckDNS tokens) should be in `docker/.env.private` which is gitignored.

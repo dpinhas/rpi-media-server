@@ -1,0 +1,43 @@
+---
+- name: Build combined env file
+  ansible.builtin.shell: |
+    cd {{ repo_path }}/docker
+    if [ -f {{ docker_env_file }} ] && [ -f {{ docker_env_private_file }} ]; then
+      cat {{ docker_env_file }} {{ docker_env_private_file }} > {{ docker_env_combined_file }}
+    elif [ -f {{ docker_env_file }} ]; then
+      cp {{ docker_env_file }} {{ docker_env_combined_file }}
+    fi
+  changed_when: false
+  become: true
+  become_user: "{{ pi_user }}"
+
+- name: Pull latest Docker images
+  ansible.builtin.command:
+    cmd: >
+      docker compose
+      -f {{ docker_compose_file }}
+      --env-file {{ docker_env_combined_file }}
+      pull
+    chdir: "{{ repo_path }}/docker"
+  register: docker_pull
+  changed_when: "'Pull complete' in docker_pull.stdout or 'Downloaded' in docker_pull.stdout"
+  become: true
+  become_user: "{{ pi_user }}"
+
+- name: Deploy Docker containers
+  ansible.builtin.command:
+    cmd: >
+      docker compose
+      -f {{ docker_compose_file }}
+      --env-file {{ docker_env_combined_file }}
+      up -d
+    chdir: "{{ repo_path }}/docker"
+  register: docker_up
+  changed_when: "'Started' in docker_up.stderr or 'Creating' in docker_up.stderr"
+  become: true
+  become_user: "{{ pi_user }}"
+
+- name: Show deployment result
+  ansible.builtin.debug:
+    var: docker_up.stderr_lines
+  when: docker_up.stderr_lines | length > 0

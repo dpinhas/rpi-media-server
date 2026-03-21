@@ -1,0 +1,10 @@
+---
+# NFS server configuration
+nfs_export_path: /mnt/data
+nfs_export_options: "rw,sync,no_subtree_check"
+nfs_allowed_network: 192.168.68.0/24
+
+# SSD mount
+ssd_mount_path: /mnt/data
+ssd_mount_opts: "defaults,noatime"
+ssd_device_pattern: sda

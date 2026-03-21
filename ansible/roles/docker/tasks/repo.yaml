@@ -1,0 +1,10 @@
+---
+- name: Clone repository
+  ansible.builtin.git:
+    repo: "{{ repo_url }}"
+    dest: "{{ repo_path }}"
+    clone: true
+    update: true
+    version: "{{ repo_branch }}"
+  become: true
+  become_user: "{{ pi_user }}"

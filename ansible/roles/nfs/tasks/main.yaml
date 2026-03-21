@@ -1,0 +1,50 @@
+---
+# --- NFS Server (storage_server group) ---
+
+- name: Get UUID of SSD
+  ansible.builtin.shell:
+    cmd: blkid | grep {{ ssd_device_pattern }} | awk -F '"' '{print $2}'
+  register: ssd_uuid_result
+  changed_when: false
+  when: inventory_hostname in groups['storage_server']
+  tags: [nfs, storage]
+
+- name: Mount SSD storage
+  ansible.posix.mount:
+    path: "{{ ssd_mount_path }}"
+    src: "UUID={{ ssd_uuid_result.stdout }}"
+    fstype: ext4
+    opts: "{{ ssd_mount_opts }}"
+    state: mounted
+  when: inventory_hostname in groups['storage_server']
+  tags: [nfs, storage]
+
+- name: Install NFS server
+  ansible.builtin.apt:
+    name: nfs-kernel-server
+    state: present
+  when: inventory_hostname in groups['storage_server']
+  tags: [nfs]
+
+- name: Configure NFS exports
+  ansible.builtin.lineinfile:
+    path: /etc/exports
+    line: "{{ nfs_export_path }}       {{ nfs_allowed_network }}({{ nfs_export_options }})"
+    regexp: "^{{ nfs_export_path }}"
+  notify:
+    - Restart NFS server
+    - Re-export NFS shares
+  when: inventory_hostname in groups['storage_server']
+  tags: [nfs]
+
+# --- NFS Client (non-storage hosts) ---
+
+- name: Mount NFS share from storage server
+  ansible.posix.mount:
+    path: "{{ nfs_mount_path }}"
+    src: "{{ nfs_server }}:{{ nfs_mount_path }}"
+    fstype: nfs
+    opts: "{{ nfs_mount_opts }}"
+    state: mounted
+  when: inventory_hostname not in groups['storage_server']
+  tags: [nfs]
