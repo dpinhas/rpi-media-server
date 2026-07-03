@@ -14,22 +14,47 @@
   failed_when: false
   tags: [system]
 
-- name: Reboot if required
+- name: Check if running locally
+  ansible.builtin.set_fact:
+    is_local: "{{ ansible_connection == 'local' or inventory_hostname in ['localhost', '127.0.0.1', ansible_hostname] }}"
+  tags: [system]
+
+- name: Warn about pending reboot (local run)
+  ansible.builtin.debug:
+    msg: "Reboot is required but skipped — running locally. Reboot manually when ready."
+  when:
+    - is_local | bool
+    - "'NEEDRESTART-KSTA: 2' in reboot_required.stdout or 'NEEDRESTART-KSTA: 3' in reboot_required.stdout"
+  tags: [system, reboot]
+
+- name: Reboot if required (remote run)
   ansible.builtin.reboot:
     reboot_timeout: 120
-  when: "'NEEDRESTART-KSTA: 2' in reboot_required.stdout or 'NEEDRESTART-KSTA: 3' in reboot_required.stdout"
+  when:
+    - not is_local | bool
+    - "'NEEDRESTART-KSTA: 2' in reboot_required.stdout or 'NEEDRESTART-KSTA: 3' in reboot_required.stdout"
   tags: [system, reboot]
 
 - name: Set hostname
-  ansible.builtin.shell: raspi-config nonint do_hostname {{ inventory_hostname }}
+  ansible.builtin.shell: |
+    current=$(hostname)
+    if [ "$current" != "{{ inventory_hostname }}" ]; then
+      raspi-config nonint do_hostname {{ inventory_hostname }}
+      echo "changed"
+    fi
   register: hostname_result
-  changed_when: hostname_result.rc == 0
+  changed_when: "'changed' in hostname_result.stdout"
+  tags: [system]
+
+- name: Get current locale
+  ansible.builtin.command: localectl status
+  register: current_locale
+  changed_when: false
   tags: [system]
 
 - name: Set locale
   ansible.builtin.shell: raspi-config nonint do_change_locale {{ pi_locale }}
-  register: locale_result
-  changed_when: locale_result.rc == 0
+  when: pi_locale not in current_locale.stdout
   tags: [system]
 
 - name: Install common packages

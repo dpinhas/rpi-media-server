@@ -1,4 +1,9 @@
 ---
+- name: Check if repository exists
+  ansible.builtin.stat:
+    path: "{{ repo_path }}/.git"
+  register: repo_exists
+
 - name: Clone repository
   ansible.builtin.git:
     repo: "{{ repo_url }}"
@@ -8,3 +13,4 @@
     version: "{{ repo_branch }}"
   become: true
   become_user: "{{ pi_user }}"
+  when: not repo_exists.stat.exists

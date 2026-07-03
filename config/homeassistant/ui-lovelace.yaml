@@ -15,48 +15,29 @@ views:
             heading_style: title
             icon: mdi:blinds
           - type: tile
-            entity: cover.bedroom_blind_2
+            entity: cover.bedroom_blind
             name: Bedroom
             features:
               - type: cover-open-close
-              - type: cover-position
+              # - type: cover-position
           - type: tile
-            entity: cover.2nd_bedroom_blind_3
+            entity: cover.2nd_bedroom_blind
             name: 2nd Bedroom
             features:
               - type: cover-open-close
-              - type: cover-position
+              # - type: cover-position
           - type: tile
-            entity: cover.kitchen_blind_3
+            entity: cover.kitchen_blind
             name: Kitchen
             features:
               - type: cover-open-close
-              - type: cover-position
+              # - type: cover-position
           - type: tile
-            entity: cover.living_room_blind_2
+            entity: cover.living_room_blind
             name: Living Room
             features:
               - type: cover-open-close
-              - type: cover-position
-          - type: heading
-            heading: Scenes
-            heading_style: subtitle
-            icon: mdi:palette
-          - type: tile
-            entity: scene.all_blinds_open
-            name: All Open
-            icon: mdi:blinds-open
-            color: green
-          - type: tile
-            entity: scene.all_blinds_closed
-            name: All Closed
-            icon: mdi:blinds
-            color: red
-          - type: tile
-            entity: scene.morning_blinds
-            name: Morning
-            icon: mdi:weather-sunny
-            color: amber
+              # - type: cover-position
 
       - title: Lights
         type: grid
@@ -115,11 +96,11 @@ views:
             heading_style: title
             icon: mdi:fridge
           - type: tile
-            entity: cover.kitchen_blind_3
+            entity: cover.kitchen_blind
             name: Blind
             features:
               - type: cover-open-close
-              - type: cover-position
+              # - type: cover-position
           - type: tile
             entity: switch.kitchen_gang_switch_l2
             name: Island Light
@@ -141,11 +122,11 @@ views:
             heading_style: title
             icon: mdi:sofa
           - type: tile
-            entity: cover.living_room_blind_2
+            entity: cover.living_room_blind
             name: Blind
             features:
               - type: cover-open-close
-              - type: cover-position
+              # - type: cover-position
           - type: tile
             entity: switch.kitchen_gang_switch_l1
             name: Light
@@ -159,11 +140,11 @@ views:
             heading_style: title
             icon: mdi:bed-king-outline
           - type: tile
-            entity: cover.bedroom_blind_2
+            entity: cover.bedroom_blind
             name: Blind
             features:
               - type: cover-open-close
-              - type: cover-position
+              # - type: cover-position
 
       - title: 2nd Bedroom
         type: grid
@@ -173,8 +154,8 @@ views:
             heading_style: title
             icon: mdi:bed-king-outline
           - type: tile
-            entity: cover.2nd_bedroom_blind_3
+            entity: cover.2nd_bedroom_blind
             name: Blind
             features:
               - type: cover-open-close
-              - type: cover-position
+              # - type: cover-position

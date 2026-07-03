@@ -1,6 +1,4 @@
 ---
-# --- NFS Server (storage_server group) ---
-
 - name: Get UUID of SSD
   ansible.builtin.shell:
     cmd: blkid | grep {{ ssd_device_pattern }} | awk -F '"' '{print $2}'
@@ -36,8 +34,6 @@
     - Re-export NFS shares
   when: inventory_hostname in groups['storage_server']
   tags: [nfs]
-
-# --- NFS Client (non-storage hosts) ---
 
 - name: Mount NFS share from storage server
   ansible.posix.mount:
