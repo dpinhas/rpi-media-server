@@ -1,5 +1,6 @@
 name: reviewdog
 on: [pull_request]
+
 jobs:
   yamllint:
     name: runner / yamllint
@@ -10,4 +11,33 @@ jobs:
         uses: reviewdog/action-yamllint@v1
         with:
           github_token: ${{ secrets.github_token }}
-          reporter: github-pr-review # Change reporter.
+          reporter: github-pr-check
+          fail_level: warning
+
+  shellcheck:
+    name: runner / shellcheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: shellcheck
+        uses: reviewdog/action-shellcheck@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-check
+          fail_level: warning
+
+  ansible-lint:
+    name: runner / ansible-lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: ansible-lint
+        uses: reviewdog/action-ansiblelint@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-check
+          fail_level: warning
