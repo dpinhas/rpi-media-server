@@ -1,0 +1,113 @@
+---
+- name: Update repos and upgrade all packages
+  ansible.builtin.apt:
+    upgrade: true
+    update_cache: true
+    force_apt_get: true
+    cache_valid_time: 3600
+  tags: [packages]
+
+- name: Check if reboot is required
+  ansible.builtin.command: needrestart -b
+  register: reboot_required
+  changed_when: false
+  failed_when: false
+  tags: [system]
+
+- name: Check if running locally
+  ansible.builtin.set_fact:
+    is_local: "{{ ansible_connection == 'local' or inventory_hostname in ['localhost', '127.0.0.1', ansible_hostname] }}"
+  tags: [system]
+
+- name: Warn about pending reboot (local run)
+  ansible.builtin.debug:
+    msg: "Reboot is required but skipped — running locally. Reboot manually when ready."
+  when:
+    - is_local | bool
+    - "'NEEDRESTART-KSTA: 2' in reboot_required.stdout or 'NEEDRESTART-KSTA: 3' in reboot_required.stdout"
+  tags: [system, reboot]
+
+- name: Reboot if required (remote run)
+  ansible.builtin.reboot:
+    reboot_timeout: 120
+  when:
+    - not is_local | bool
+    - "'NEEDRESTART-KSTA: 2' in reboot_required.stdout or 'NEEDRESTART-KSTA: 3' in reboot_required.stdout"
+  tags: [system, reboot]
+
+- name: Set hostname
+  ansible.builtin.shell: |
+    current=$(hostname)
+    if [ "$current" != "{{ inventory_hostname }}" ]; then
+      raspi-config nonint do_hostname {{ inventory_hostname }}
+      echo "changed"
+    fi
+  register: hostname_result
+  changed_when: "'changed' in hostname_result.stdout"
+  tags: [system]
+
+- name: Get current locale
+  ansible.builtin.command: localectl status
+  register: current_locale
+  changed_when: false
+  tags: [system]
+
+- name: Set locale
+  ansible.builtin.shell: raspi-config nonint do_change_locale {{ pi_locale }}
+  when: pi_locale not in current_locale.stdout
+  tags: [system]
+
+- name: Install common packages
+  ansible.builtin.apt:
+    name: "{{ common_packages }}"
+    state: present
+  tags: [packages]
+
+- name: Customize .bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ pi_home }}/.bashrc"
+    line: "alias ll='ls -lh --color --group-directories-first'"
+    create: true
+    owner: "{{ pi_user }}"
+  tags: [dotfiles]
+
+- name: Deploy .vimrc
+  ansible.builtin.template:
+    src: vimrc.j2
+    dest: "{{ pi_home }}/.vimrc"
+    owner: "{{ pi_user }}"
+    mode: "0644"
+  tags: [dotfiles]
+
+- name: Deploy .gitconfig
+  ansible.builtin.template:
+    src: gitconfig.j2
+    dest: "{{ pi_home }}/.gitconfig"
+    owner: "{{ pi_user }}"
+    mode: "0644"
+  tags: [dotfiles]
+
+- name: Deploy SSH client config
+  ansible.builtin.template:
+    src: ssh_config.j2
+    dest: "{{ pi_home }}/.ssh/config"
+    owner: "{{ pi_user }}"
+    mode: "0644"
+  tags: [dotfiles]
+
+- name: Create data directory
+  ansible.builtin.file:
+    path: "{{ data_path }}"
+    state: directory
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+  tags: [storage]
+
+- name: Add DATA_PATH to bashrc
+  ansible.builtin.lineinfile:
+    path: "{{ pi_home }}/.bashrc"
+    line: "export DATA_PATH='{{ data_path }}/'"
+    state: present
+    create: true
+    insertafter: EOF
+  tags: [dotfiles]

@@ -1,0 +1,5 @@
+---
+docker_compose_file: "docker-compose.pi0.yaml"
+docker_env_file: .env
+docker_env_private_file: .env.private
+docker_env_combined_file: .env.combined

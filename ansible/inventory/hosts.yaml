@@ -1,0 +1,15 @@
+---
+all:
+  children:
+    rpi:
+      hosts:
+        pi0:
+          ansible_host: 192.168.68.10
+        pi1:
+          ansible_host: 192.168.68.11
+    storage_server:
+      hosts:
+        pi0:
+    nfs_clients:
+      hosts:
+        pi1:

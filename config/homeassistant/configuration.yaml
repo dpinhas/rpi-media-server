@@ -18,3 +18,120 @@ http:
   trusted_proxies:
     - 172.16.0.0/12
     - 192.168.0.0/16
+
+template:
+  - trigger:
+      - platform: state
+        entity_id:
+          - cover.bedroom_blind
+          - cover.2nd_bedroom_blind
+          - cover.kitchen_blind
+          - cover.living_room_blind
+    cover:
+      - name: "Bedroom Blind"
+        unique_id: "cover.bedroom_blind_homekit"
+        device_class: shutter
+        state: >
+          {% set s = states('cover.bedroom_blind') %}
+          {% if s in ['open', 'opening', 'closed', 'closing'] %}
+            {{ s }}
+          {% else %}
+            closed
+          {% endif %}
+        position: "{{ state_attr('cover.bedroom_blind', 'current_position') | int(0) }}"
+        open_cover:
+          service: cover.open_cover
+          target:
+            entity_id: cover.bedroom_blind
+        close_cover:
+          service: cover.close_cover
+          target:
+            entity_id: cover.bedroom_blind
+        stop_cover:
+          service: cover.stop_cover
+          target:
+            entity_id: cover.bedroom_blind
+
+      - name: "2nd Bedroom Blind"
+        unique_id: "cover.2nd_bedroom_blind_homekit"
+        device_class: shutter
+        state: >
+          {% set s = states('cover.2nd_bedroom_blind') %}
+          {% if s in ['open', 'opening', 'closed', 'closing'] %}
+            {{ s }}
+          {% else %}
+            closed
+          {% endif %}
+        position: "{{ state_attr('cover.2nd_bedroom_blind', 'current_position') | int(0) }}"
+        open_cover:
+          service: cover.open_cover
+          target:
+            entity_id: cover.2nd_bedroom_blind
+        close_cover:
+          service: cover.close_cover
+          target:
+            entity_id: cover.2nd_bedroom_blind
+        stop_cover:
+          service: cover.stop_cover
+          target:
+            entity_id: cover.2nd_bedroom_blind
+
+      - name: "Kitchen Blind"
+        unique_id: "cover.kitchen_blind_homekit"
+        device_class: shutter
+        state: >
+          {% set s = states('cover.kitchen_blind') %}
+          {% if s in ['open', 'opening', 'closed', 'closing'] %}
+            {{ s }}
+          {% else %}
+            closed
+          {% endif %}
+        position: "{{ state_attr('cover.kitchen_blind', 'current_position') | int(0) }}"
+        open_cover:
+          service: cover.open_cover
+          target:
+            entity_id: cover.kitchen_blind
+        close_cover:
+          service: cover.close_cover
+          target:
+            entity_id: cover.kitchen_blind
+        stop_cover:
+          service: cover.stop_cover
+          target:
+            entity_id: cover.kitchen_blind
+
+      - name: "Living Room Blind"
+        unique_id: "cover.living_room_blind_homekit"
+        device_class: shutter
+        state: >
+          {% set s = states('cover.living_room_blind') %}
+          {% if s in ['open', 'opening', 'closed', 'closing'] %}
+            {{ s }}
+          {% else %}
+            closed
+          {% endif %}
+        position: "{{ state_attr('cover.living_room_blind', 'current_position') | int(0) }}"
+        open_cover:
+          service: cover.open_cover
+          target:
+            entity_id: cover.living_room_blind
+        close_cover:
+          service: cover.close_cover
+          target:
+            entity_id: cover.living_room_blind
+        stop_cover:
+          service: cover.stop_cover
+          target:
+            entity_id: cover.living_room_blind
+
+homekit:
+  filter:
+    include_entities:
+      - cover.bedroom_blind_homekit
+      - cover.2nd_bedroom_blind_homekit
+      - cover.kitchen_blind_homekit
+      - cover.living_room_blind_homekit
+      - switch.kitchen_gang_switch_l1
+      - switch.kitchen_gang_switch_l2
+      - switch.kitchen_spots
+      - switch.kitchen_table_light

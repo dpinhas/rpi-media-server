@@ -1,0 +1,55 @@
+---
+- name: Check if env.private exists
+  ansible.builtin.stat:
+    path: "{{ repo_path }}/docker/{{ docker_env_private_file }}"
+  register: env_private
+
+- name: Build combined env file (with private)
+  ansible.builtin.assemble:
+    src: "{{ repo_path }}/docker/"
+    dest: "{{ repo_path }}/docker/{{ docker_env_combined_file }}"
+    regexp: "^(\\.env|\\.env\\.private)$"
+    owner: "{{ pi_user }}"
+    mode: "0600"
+  when: env_private.stat.exists
+
+- name: Copy env file (no private)
+  ansible.builtin.copy:
+    src: "{{ repo_path }}/docker/{{ docker_env_file }}"
+    dest: "{{ repo_path }}/docker/{{ docker_env_combined_file }}"
+    remote_src: true
+    owner: "{{ pi_user }}"
+    mode: "0600"
+  when: not env_private.stat.exists
+
+- name: Pull latest Docker images
+  ansible.builtin.command:
+    cmd: >
+      docker compose
+      -f {{ docker_compose_file }}
+      --env-file {{ docker_env_combined_file }}
+      pull
+    chdir: "{{ repo_path }}/docker"
+  register: docker_pull
+  changed_when: false
+  become: true
+  become_user: "{{ pi_user }}"
+  tags: [pull]
+
+- name: Deploy Docker containers
+  ansible.builtin.command:
+    cmd: >
+      docker compose
+      -f {{ docker_compose_file }}
+      --env-file {{ docker_env_combined_file }}
+      up -d
+    chdir: "{{ repo_path }}/docker"
+  register: docker_up
+  changed_when: false
+  become: true
+  become_user: "{{ pi_user }}"
+
+- name: Show deployment result
+  ansible.builtin.debug:
+    var: docker_up.stderr_lines
+  when: docker_up.stderr_lines | default([]) | length > 0

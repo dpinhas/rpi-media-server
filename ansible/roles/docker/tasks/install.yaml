@@ -1,0 +1,25 @@
+---
+- name: Check if Docker is installed
+  ansible.builtin.command: docker --version
+  register: docker_check
+  changed_when: false
+  failed_when: false
+
+- name: Download Docker install script
+  ansible.builtin.get_url:
+    url: https://get.docker.com
+    dest: /root/get-docker.sh
+    mode: "0755"
+  when: docker_check.rc != 0
+
+- name: Install Docker
+  ansible.builtin.command: sh /root/get-docker.sh
+  args:
+    creates: /usr/bin/docker
+  when: docker_check.rc != 0
+
+- name: Add pi user to docker group
+  ansible.builtin.user:
+    name: "{{ pi_user }}"
+    groups: docker
+    append: true

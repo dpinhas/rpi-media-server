@@ -1,0 +1,13 @@
+---
+# Server settings
+ssd_device_pattern: sda
+ssd_mount_path: /mnt/data
+ssd_mount_opts: "defaults,noatime"
+nfs_export_path: /mnt/data
+nfs_export_options: "rw,sync,no_subtree_check"
+nfs_allowed_network: 192.168.68.0/24
+
+# Client settings
+nfs_server: "{{ duckdns_domain }}"
+nfs_mount_path: "{{ data_path }}"
+nfs_mount_opts: defaults
