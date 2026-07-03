@@ -1,0 +1,26 @@
+---
+- name: Ensure updater log file exists and has correct permissions
+  ansible.builtin.file:
+    path: /var/log/rpi-media-server-updater.log
+    state: touch
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+    mode: "0644"
+    modification_time: preserve
+    access_time: preserve
+  become: true
+
+- name: Ensure auto_pull.sh script is executable
+  ansible.builtin.file:
+    path: "{{ repo_path }}/scripts/auto_pull.sh"
+    mode: "0755"
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+
+- name: Deploy auto-update cron job for main branch
+  ansible.builtin.cron:
+    name: "Auto-pull and update rpi-media-server"
+    user: "{{ pi_user }}"
+    minute: "*/5"
+    job: "{{ repo_path }}/scripts/auto_pull.sh"
+    state: present

@@ -10,3 +10,7 @@
 - name: Deploy containers
   ansible.builtin.include_tasks: deploy.yaml
   tags: [docker, deploy]
+
+- name: Configure auto-update cron
+  ansible.builtin.include_tasks: auto_update.yaml
+  tags: [docker, auto_update]
