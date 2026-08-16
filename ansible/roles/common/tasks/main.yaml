@@ -87,13 +87,54 @@
     mode: "0644"
   tags: [dotfiles]
 
+- name: Ensure .ssh directory exists
+  ansible.builtin.file:
+    path: "{{ pi_home }}/.ssh"
+    state: directory
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+    mode: "0700"
+  tags: [dotfiles, ssh]
+
 - name: Deploy SSH client config
   ansible.builtin.template:
     src: ssh_config.j2
     dest: "{{ pi_home }}/.ssh/config"
     owner: "{{ pi_user }}"
     mode: "0644"
-  tags: [dotfiles]
+  tags: [dotfiles, ssh]
+
+# github.com is pinned rather than blindly trusted because auto_pull.sh and
+# pi0's post-commit hook fetch code over SSH and then execute it. Keys are
+# read from GitHub's published metadata endpoint (authenticated by TLS)
+# instead of being hardcoded, since GitHub rotates them.
+- name: Fetch GitHub published SSH host keys
+  ansible.builtin.uri:
+    url: https://api.github.com/meta
+    return_content: true
+  register: github_meta
+  changed_when: false
+  check_mode: false
+  tags: [dotfiles, ssh]
+
+- name: Pin GitHub host keys
+  ansible.builtin.known_hosts:
+    path: "{{ pi_home }}/.ssh/known_hosts"
+    name: github.com
+    key: "github.com {{ item }}"
+    state: present
+  loop: "{{ github_meta.json.ssh_keys }}"
+  become: true
+  become_user: "{{ pi_user }}"
+  tags: [dotfiles, ssh]
+
+- name: Ensure known_hosts ownership
+  ansible.builtin.file:
+    path: "{{ pi_home }}/.ssh/known_hosts"
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+    mode: "0644"
+  tags: [dotfiles, ssh]
 
 - name: Create data directory
   ansible.builtin.file:

@@ -1,0 +1,41 @@
+---
+# TEMPLATE — copy to vault.yaml, fill in real values, then ENCRYPT IT:
+#
+#   cd ansible
+#   cp inventory/group_vars/all/vault.yaml.example \
+#      inventory/group_vars/all/vault.yaml
+#   $EDITOR inventory/group_vars/all/vault.yaml     # put real values in
+#   ansible-vault encrypt inventory/group_vars/all/vault.yaml
+#
+# vault.yaml is intended to be COMMITTED, but only in encrypted form — that is
+# what gives these secrets a versioned, restorable home instead of existing
+# only on the Pis. CI fails the build if vault.yaml is committed unencrypted
+# (see .github/workflows/reviewdog.yml :: vault-encrypted).
+#
+# To edit later:  ansible-vault edit inventory/group_vars/all/vault.yaml
+# To rotate:      ansible-vault rekey inventory/group_vars/all/vault.yaml
+#
+# All names are `vault_`-prefixed so it is obvious at any use site that the
+# value came from the vault.
+
+# --- Telegram (Alertmanager notifications, pi1) -----------------------------
+# From @BotFather. Format: "<bot_id>:<secret>".
+vault_telegram_bot_token: "CHANGEME:telegram-bot-token-from-botfather"
+# Negative for group chats. Get via getUpdates or @RawDataBot.
+vault_telegram_chat_id: 0
+
+# --- DuckDNS (Traefik ACME DNS-01 challenge, pi0) ---------------------------
+# Consumed by Traefik as DUCKDNS_TOKEN. NOTE: this is currently supplied via
+# docker/.env.private, not from this vault — see docker/.env.private.example.
+# Listed here so there is one inventory of every credential the stack needs.
+vault_duckdns_token: "CHANGEME-duckdns-token"
+
+# --- Tailscale (pi0 subnet router) ------------------------------------------
+# Reusable/ephemeral auth key from the Tailscale admin console.
+vault_tailscale_auth_key: "CHANGEME-tskey-auth-..."
+
+# --- *arr API keys (Prometheus exporters, pi0) ------------------------------
+# Found in each app's Settings -> General -> API Key.
+vault_sonarr_api_key: "CHANGEME-sonarr-api-key"
+vault_radarr_api_key: "CHANGEME-radarr-api-key"
+vault_bazarr_api_key: "CHANGEME-bazarr-api-key"

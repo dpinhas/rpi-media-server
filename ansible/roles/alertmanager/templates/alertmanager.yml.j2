@@ -1,0 +1,38 @@
+---
+# {{ ansible_managed }}
+#
+# Rendered by the `alertmanager` Ansible role. Do NOT edit on the host —
+# changes will be overwritten on the next play. Edit the template instead:
+#   ansible/roles/alertmanager/templates/alertmanager.yml.j2
+#
+# The Telegram bot token is NOT stored here. It is written to a separate
+# 0400 file owned by uid 65534 (the `nobody` user the container runs as)
+# and referenced below via `bot_token_file`.
+global:
+  resolve_timeout: {{ alertmanager_resolve_timeout }}
+  telegram_api_url: {{ alertmanager_telegram_api_url }}
+
+route:
+  receiver: 'telegram-notifications'
+  group_wait: {{ alertmanager_group_wait }}
+  group_interval: {{ alertmanager_group_interval }}
+  repeat_interval: {{ alertmanager_repeat_interval }}
+
+receivers:
+  - name: 'telegram-notifications'
+    telegram_configs:
+      - bot_token_file: '{{ alertmanager_container_config_dir }}/{{ alertmanager_bot_token_filename }}'
+        chat_id: {{ vault_telegram_chat_id }}
+        parse_mode: 'Markdown'
+        # NOTE: Go template syntax below — {% raw %}{{ }}{% endraw %} is evaluated by
+        # Alertmanager at notify time, not by Jinja2 at render time. The raw
+        # block prevents Ansible from interpreting it. The tags are placed
+        # INLINE with the content (not on their own lines) so trim_blocks
+        # cannot introduce a leading blank line into the message body.
+        message: |
+{% raw %}          *🔥 Alert: {{ .CommonLabels.alertname }}*
+          *Status:* {{ .Status }}
+          *Instance:* {{ .CommonLabels.instance }}
+          *Summary:* {{ .CommonAnnotations.summary }}
+          *Description:* {{ .CommonAnnotations.description }}{% endraw %}
+

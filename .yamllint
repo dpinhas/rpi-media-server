@@ -3,3 +3,11 @@ extends: default
 
 rules:
   line-length: disable
+
+# ansible-vault files are not YAML. The `$ANSIBLE_VAULT;1.1;AES256` header must
+# be the very first line, so `document-start` can never be satisfied and the
+# hex body has no structure to lint. Encryption is verified separately by the
+# vault-encrypted job in .github/workflows/reviewdog.yml.
+ignore: |
+  **/vault.yaml
+  **/vault.yml

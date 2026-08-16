@@ -5,6 +5,10 @@
 #   ansible-playbook playbooks/deploy.yaml -l pi0 --tags docker   # docker only
 #   ansible-playbook playbooks/deploy.yaml -l pi0 --tags nfs      # NFS only
 #   ansible-playbook playbooks/deploy.yaml -l pi0 --tags deploy   # redeploy containers
+#
+# Plays touching secrets need the vault password, e.g.:
+#   ansible-playbook playbooks/deploy.yaml -l pi1 --tags alertmanager \
+#     --vault-password-file .vault_pass
 
 - name: Raspberry Pi deployment
   hosts: rpi
@@ -20,3 +24,10 @@
 
     - role: docker
       tags: [docker]
+
+    # Runs after `docker` because it renders into the git checkout that the
+    # docker role clones. Scoped by inventory group, not hostname, so moving
+    # the monitoring stack is an inventory edit.
+    - role: alertmanager
+      tags: [alertmanager]
+      when: inventory_hostname in groups['monitoring'] | default([])

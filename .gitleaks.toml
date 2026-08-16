@@ -1,0 +1,32 @@
+# gitleaks configuration
+#
+# Extends the built-in ruleset rather than replacing it, so every default
+# rule stays active and new upstream rules are picked up automatically.
+[extend]
+useDefault = true
+
+# The built-in `telegram-bot-api-token` rule requires the literal "telegr"
+# to appear on the SAME line as the assignment:
+#
+#   regex = '...(?:telegr)(?:[ \t\w.-]{0,20})...(?:=|:|...)...(token)...'
+#
+# Alertmanager config splits those across two lines:
+#
+#   telegram_configs:
+#     - bot_token: '<token>'
+#
+# so the default rule cannot match it — verified against the token that was
+# committed to this repo. The Telegram token format is distinctive enough
+# (numeric bot id, colon, "A", then exactly 34 base64url chars) to match on
+# shape alone without a keyword gate.
+[[rules]]
+id = "telegram-bot-token-standalone"
+description = "Telegram Bot API token matched by format, independent of surrounding keywords."
+regex = '''\b([0-9]{8,16}:A[A-Za-z0-9_-]{34})\b'''
+entropy = 3.0
+[rules.allowlist]
+# Alertmanager's own docs/examples use this placeholder shape.
+regexes = [
+  '''CHANGEME''',
+  '''(?i)your[_-]?bot[_-]?token''',
+]

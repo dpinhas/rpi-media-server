@@ -1,0 +1,95 @@
+---
+- name: Assert Telegram secrets are available from vault
+  ansible.builtin.assert:
+    that:
+      - vault_telegram_bot_token is defined
+      - vault_telegram_bot_token | length > 0
+      - vault_telegram_chat_id is defined
+    fail_msg: >-
+      vault_telegram_bot_token / vault_telegram_chat_id are not defined.
+      Populate ansible/inventory/group_vars/all/vault.yaml and pass
+      --vault-password-file (see ansible/README.md). Without these,
+      Alertmanager cannot deliver notifications.
+  tags: [alertmanager, secrets]
+
+# The config dir lives inside the git checkout. Creating it before the repo
+# is cloned would leave a non-empty destination and make the `docker` role's
+# git clone fail, so refuse to run until the checkout exists.
+- name: Check the repository has been cloned
+  ansible.builtin.stat:
+    path: "{{ repo_path }}/.git"
+  register: alertmanager_repo
+  tags: [alertmanager]
+
+- name: Fail early if the repository is missing
+  ansible.builtin.fail:
+    msg: >-
+      {{ repo_path }} is not a git checkout yet. Run the `docker` role first
+      (--tags docker) so the repository is cloned, then re-run --tags alertmanager.
+  when: not alertmanager_repo.stat.exists
+  tags: [alertmanager]
+
+- name: Ensure alertmanager config directory exists
+  ansible.builtin.file:
+    path: "{{ alertmanager_host_config_dir }}"
+    state: directory
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+    mode: "0755"
+  tags: [alertmanager]
+
+# Written as uid 65534 (`nobody`) because that is the user the
+# prom/alertmanager container runs as; a pi-owned 0600 file would be
+# unreadable inside the container and Alertmanager would fail to start.
+- name: Deploy Telegram bot token file
+  ansible.builtin.copy:
+    content: "{{ vault_telegram_bot_token }}"
+    dest: "{{ alertmanager_host_config_dir }}/{{ alertmanager_bot_token_filename }}"
+    owner: "{{ alertmanager_container_uid }}"
+    group: "{{ alertmanager_container_gid }}"
+    mode: "0400"
+  become: true
+  no_log: true
+  notify: Reload alertmanager
+  tags: [alertmanager, secrets]
+
+- name: Deploy alertmanager configuration
+  ansible.builtin.template:
+    src: alertmanager.yml.j2
+    dest: "{{ alertmanager_host_config_dir }}/alertmanager.yml"
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+    mode: "0644"
+  notify: Reload alertmanager
+  tags: [alertmanager]
+
+# Validate using the amtool binary inside the already-running container.
+# This runs BEFORE the reload handler fires, so an invalid config fails the
+# play while the previous (valid) config is still loaded in memory.
+- name: Check whether alertmanager container is running
+  ansible.builtin.command:
+    cmd: docker inspect -f '{{ "{{" }}.State.Running{{ "}}" }}' alertmanager
+  register: alertmanager_running
+  changed_when: false
+  failed_when: false
+  become: true
+  become_user: "{{ pi_user }}"
+  tags: [alertmanager]
+
+- name: Validate alertmanager configuration with amtool
+  ansible.builtin.command:
+    cmd: >-
+      docker exec alertmanager
+      amtool check-config {{ alertmanager_container_config_dir }}/alertmanager.yml
+  register: alertmanager_check
+  changed_when: false
+  become: true
+  become_user: "{{ pi_user }}"
+  when: alertmanager_running.stdout | default('false') | trim == 'true'
+  tags: [alertmanager]
+
+- name: Show alertmanager config validation output
+  ansible.builtin.debug:
+    var: alertmanager_check.stdout_lines
+  when: alertmanager_check.stdout_lines is defined
+  tags: [alertmanager]

@@ -1,0 +1,37 @@
+---
+# EXAMPLE ONLY — this file is documentation, not a live config.
+#
+# The real config/alertmanager/alertmanager.yml is:
+#   * generated on the host by the `alertmanager` Ansible role
+#   * gitignored (see .gitignore), so it never carries a token into git
+#
+# To deploy:
+#   cd ansible
+#   ansible-playbook playbooks/deploy.yaml -l pi1 --tags alertmanager \
+#     --vault-password-file .vault_pass
+#
+# The bot token is written alongside this file as `telegram_bot_token`
+# (mode 0400, owned by uid 65534 — the user the container runs as) and
+# referenced below via `bot_token_file`. Never inline a token here.
+global:
+  resolve_timeout: 5m
+  telegram_api_url: https://api.telegram.org
+
+route:
+  receiver: 'telegram-notifications'
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 3h
+
+receivers:
+  - name: 'telegram-notifications'
+    telegram_configs:
+      - bot_token_file: '/etc/alertmanager/telegram_bot_token'
+        chat_id: 0  # replaced by vault_telegram_chat_id
+        parse_mode: 'Markdown'
+        message: |
+          *🔥 Alert: {{ .CommonLabels.alertname }}*
+          *Status:* {{ .Status }}
+          *Instance:* {{ .CommonLabels.instance }}
+          *Summary:* {{ .CommonAnnotations.summary }}
+          *Description:* {{ .CommonAnnotations.description }}
