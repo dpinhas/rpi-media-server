@@ -80,18 +80,6 @@ services:
     networks:
       - pi0_network
 
-  portainer:
-    image: portainer/portainer-ce:${PORTAINER_TAG}
-    container_name: portainer
-    restart: unless-stopped
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ${DATA_PATH}/config/portainer:/data
-    ports:
-      - "9000:9000"
-    networks:
-      - pi0_network
-
   tailscale:
     privileged: true
     hostname: ${TAILSCALE_HOSTNAME}
@@ -315,9 +303,11 @@ services:
     networks:
       - pi0_network
 
-  jellyseerr:
-    image: fallenbagel/jellyseerr:${JELLYSEERR_TAG}
-    container_name: jellyseerr
+  # Jellyseerr was renamed upstream to Seerr. The config directory keeps its
+  # original name so the existing request history and settings carry over.
+  seerr:
+    image: ghcr.io/seerr-team/seerr:${SEERR_TAG}
+    container_name: seerr
     environment:
       - PUID=${PUID}
       - PGID=${PGID}
@@ -330,9 +320,9 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.jellyseerr.rule=Host(`${JELLYSEERR_HOST}`)"
-      - "traefik.http.routers.jellyseerr.entrypoints=web-secure"
-      - "traefik.http.services.jellyseerr.loadbalancer.server.port=5055"
+      - "traefik.http.routers.seerr.rule=Host(`${SEERR_HOST}`)"
+      - "traefik.http.routers.seerr.entrypoints=web-secure"
+      - "traefik.http.services.seerr.loadbalancer.server.port=5055"
     networks:
       - pi0_network
 
