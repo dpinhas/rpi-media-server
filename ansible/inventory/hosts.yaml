@@ -13,3 +13,10 @@ all:
     nfs_clients:
       hosts:
         pi1:
+    # Hosts running the Prometheus/Grafana/Alertmanager stack. Group
+    # membership — not a hardcoded hostname — decides where the
+    # alertmanager config and its bot token get deployed, so relocating
+    # the monitoring stack is an inventory change.
+    monitoring:
+      hosts:
+        pi1:

@@ -1,0 +1,19 @@
+---
+galaxy_info:
+  role_name: alertmanager
+  author: dpinhas
+  description: >-
+    Renders Alertmanager configuration and delivers the Telegram bot token
+    as a separate 0400 file, so no credential is stored in the repository.
+  license: MIT
+  min_ansible_version: "2.14"
+  platforms:
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+  galaxy_tags:
+    - monitoring
+    - alertmanager
+
+dependencies: []

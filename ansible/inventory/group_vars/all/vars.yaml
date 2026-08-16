@@ -1,4 +1,8 @@
 ---
+# Non-secret variables shared across all hosts.
+# Secrets live in vault.yaml alongside this file (ansible-vault encrypted)
+# and are referenced here or in roles via their `vault_`-prefixed names.
+
 # User
 pi_user: pi
 pi_home: /home/pi

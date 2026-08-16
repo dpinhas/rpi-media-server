@@ -41,3 +41,38 @@ jobs:
           github_token: ${{ secrets.github_token }}
           reporter: github-pr-check
           fail_level: warning
+
+  vault-encrypted:
+    name: runner / vault-encrypted
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # vault.yaml is meant to be committed, but only encrypted. An
+      # ansible-vault file always begins with the literal $ANSIBLE_VAULT
+      # header; anything else means plaintext secrets are about to land
+      # in git history. *.example files are templates and are skipped.
+      - name: Fail if any vault file is not ansible-vault encrypted
+        run: |
+          set -euo pipefail
+          status=0
+          found=0
+          while IFS= read -r -d '' f; do
+            found=1
+            if head -c 14 "$f" | grep -q '\$ANSIBLE_VAULT'; then
+              echo "ok        $f"
+            else
+              echo "PLAINTEXT $f"
+              status=1
+            fi
+          done < <(find . -path ./.git -prune -o \
+                        \( -name 'vault.yml' -o -name 'vault.yaml' \) \
+                        -type f -print0)
+          if [ "$found" -eq 0 ]; then
+            echo "no vault file committed yet - nothing to check"
+          fi
+          if [ "$status" -ne 0 ]; then
+            echo
+            echo "ERROR: unencrypted vault file(s) found."
+            echo "Run: ansible-vault encrypt <path>"
+          fi
+          exit "$status"

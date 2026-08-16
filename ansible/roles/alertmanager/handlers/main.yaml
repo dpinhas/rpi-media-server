@@ -1,0 +1,10 @@
+---
+# Alertmanager reloads its configuration on SIGHUP, which avoids dropping
+# in-flight notification state that a container restart would lose.
+- name: Reload alertmanager
+  ansible.builtin.command:
+    cmd: docker kill --signal=SIGHUP alertmanager
+  changed_when: true
+  become: true
+  become_user: "{{ pi_user }}"
+  listen: Reload alertmanager

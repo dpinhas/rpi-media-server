@@ -13,3 +13,21 @@ config/zigbee2mqtt/state.json
 config/zigbee2mqtt/coordinator_backup.json
 *.db
 .venv/
+
+# ansible-lint / ansible-galaxy local cache
+.ansible/
+
+# --- Secrets -----------------------------------------------------------------
+# ansible-vault password file. NEVER commit this — it is the key to every
+# secret in inventory/group_vars/all/vault.yml.
+.vault_pass
+*.vault_pass
+ansible/.vault_pass
+
+# Telegram bot token, rendered onto the host by the `alertmanager` role
+# into the directory that is bind-mounted into the container.
+config/alertmanager/telegram_bot_token
+
+# NOTE: vault.yaml is intentionally NOT ignored — it is meant to be committed
+# in ansible-vault-encrypted form so the secrets have a versioned, restorable
+# home. CI enforces that it is encrypted (.github/workflows/reviewdog.yml).

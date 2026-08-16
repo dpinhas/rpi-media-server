@@ -1,0 +1,21 @@
+---
+# Directory on the host that is bind-mounted into the alertmanager container.
+# Must match the volume in docker-compose.pi1.yaml:
+#   ${PWD}/../config/alertmanager:/etc/alertmanager
+alertmanager_host_config_dir: "{{ repo_path }}/config/alertmanager"
+
+# The same directory as seen from inside the container.
+alertmanager_container_config_dir: /etc/alertmanager
+
+# Filename holding the Telegram bot token. Written 0400 and owned by uid/gid
+# 65534 because the prom/alertmanager image runs as `nobody`.
+alertmanager_bot_token_filename: telegram_bot_token
+alertmanager_container_uid: 65534
+alertmanager_container_gid: 65534
+
+# Routing / timing knobs (previously hardcoded in alertmanager.yml).
+alertmanager_resolve_timeout: 5m
+alertmanager_group_wait: 10s
+alertmanager_group_interval: 1m
+alertmanager_repeat_interval: 3h
+alertmanager_telegram_api_url: https://api.telegram.org
