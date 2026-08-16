@@ -1,5 +1,29 @@
 # {{ ansible_managed }}
+#
+# Host-key policy is deliberately NOT relaxed globally. `auto_pull.sh` and
+# pi0's post-commit hook both run git-over-SSH against GitHub and then
+# execute what they fetch via `docker compose up`, so disabling host-key
+# verification on that path would allow a LAN-level MITM to feed this host
+# arbitrary compose files. Keep github.com strict.
+
+# GitHub — strict. Host keys are pre-seeded into known_hosts by the
+# `common` role (see tasks/main.yaml :: Pin GitHub host keys), so this
+# never prompts and never silently trusts a new key.
+Host github.com
+  HostName github.com
+  User git
+  StrictHostKeyChecking yes
+  IdentityFile ~/.ssh/id_rsa
+
+# Pi-to-Pi on the trusted LAN. `accept-new` trusts a key on first contact
+# (so no manual seeding is needed for a rebuilt Pi) but still REFUSES a key
+# that has changed — unlike `no`, which accepts any key silently. Known
+# hosts are recorded normally rather than discarded to /dev/null.
+Host {% for h in groups['rpi'] | sort %}{{ h }} {{ hostvars[h].ansible_host | default(h) }}{{ " " if not loop.last }}{% endfor %}
+
+  StrictHostKeyChecking accept-new
+  IdentityFile ~/.ssh/id_rsa
+
+# Everything else: OpenSSH defaults (strict on changed keys, prompt on new).
 Host *
-  StrictHostKeyChecking no
-  UserKnownHostsFile=/dev/null
   IdentityFile ~/.ssh/id_rsa
