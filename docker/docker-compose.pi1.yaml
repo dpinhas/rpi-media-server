@@ -6,13 +6,19 @@ services:
     container_name: prometheus
     restart: unless-stopped
     volumes:
-      - ${PWD}/../config/prometheus.yml:/etc/prometheus/prometheus.yml
-      - ${PWD}/../config/alertmanager/alert_rules.yml:/etc/prometheus/alert_rules.yml
+      # Mount the DIRECTORY, not individual files. A single-file bind mount
+      # follows the original inode, and `git pull` replaces files rather than
+      # editing them in place - so the container kept serving a six-month-old
+      # copy of alert_rules.yml while the host file was current. Config changes
+      # then require a container recreate to take effect, silently.
+      - ${PWD}/../config/prometheus:/etc/prometheus:ro
       - ${DATA_PATH}/config/prometheus/data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=${PROMETHEUS_RETENTION}'
+      # Allows `curl -X POST /-/reload` instead of `docker kill -s HUP`.
+      - '--web.enable-lifecycle'
     ports:
       - "${PROMETHEUS_PORT}:9090"
 

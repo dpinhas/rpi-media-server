@@ -4,8 +4,12 @@ global:
   external_labels:
     monitor: 'my-project'
 
+# Absolute path. This was previously "alertmanager/alert_rules.yml", which
+# Prometheus resolves relative to its working directory (/prometheus), not to
+# the config file. It therefore matched nothing and NO alert rule ever loaded -
+# silently, because a rule_files glob matching zero files is not a config error.
 rule_files:
-  - "alertmanager/alert_rules.yml"
+  - /etc/prometheus/alert_rules.yml
 
 alerting:
   alertmanagers:
@@ -14,6 +18,21 @@ alerting:
             - "alertmanager:9093"
 
 scrape_configs:
+  # Prometheus scraping itself. Without this there are no prometheus_* internal
+  # metrics at all, so there is no way to alert on Prometheus's own health -
+  # including the rule-loading failure that made every alert in this file inert.
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Alertmanager's own metrics. alertmanager_notifications_failed_total is the
+  # only signal that alerts are being generated but not delivered - the failure
+  # mode you get from a revoked bot token, and otherwise invisible until you
+  # notice an alert that never arrived.
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets: ['alertmanager:9093']
+
   - job_name: 'node-exporter'
     static_configs:
       - targets: ['192.168.68.10:9100', '192.168.68.11:9100']
