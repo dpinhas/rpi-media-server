@@ -1,0 +1,49 @@
+# gitleaks baseline — KNOWN HISTORICAL LEAKS ONLY
+#
+# ============================================================================
+#  DELETE THIS ENTIRE FILE once the credentials below have been ROTATED and
+#  the git history has been rewritten (e.g. git filter-repo). Until then,
+#  every CI run would otherwise fail on secrets that are already public, so
+#  the job would be permanently red and therefore ignored.
+#
+#  Rotating is the actual fix. This file only stops the alarm from being
+#  useless in the meantime — it does NOT make the repository safe.
+# ============================================================================
+#
+# Each entry is a gitleaks fingerprint: <commit>:<path>:<rule-id>:<line>.
+# They are pinned to the specific historical commit, path, rule and line, so:
+#   * these nine known findings are suppressed
+#   * the SAME credential reintroduced in ANY new commit still fails CI
+#   * no path, rule or time range is blanket-ignored
+#
+# Deliberately no secret values appear in this file — fingerprints are
+# positional only. Re-committing the tokens we are trying to remove would
+# defeat the point.
+#
+# Regenerate after a history rewrite with:
+#   gitleaks git -c .gitleaks.toml --report-format json --report-path /tmp/gl.json .
+#   python3 -c "import json;[print(f['Fingerprint']) for f in json.load(open('/tmp/gl.json'))]"
+
+# --- DuckDNS token (4 historical locations) ---------------------------------
+# Grants full control of dpinhas.duckdns.org AND is the ACME DNS-01 credential,
+# so whoever holds it can also issue valid certs for *.dpinhas.duckdns.org.
+# Highest-priority rotation.
+674511bde4f0ba331d209f035765255173cff2cc:scripts/update_ddns_records:generic-api-key:10
+674511bde4f0ba331d209f035765255173cff2cc:docker/docker-compose.yaml:generic-api-key:141
+4908766ce3337daa60ad4a5bc42b6a7e8e8899c2:docker/services.yaml:generic-api-key:39
+60930a84171e325c9032cdd529458fe3878bf6fd:docker/.env:generic-api-key:43
+
+# --- Telegram bot token (2 historical locations) -----------------------------
+# Same token, reported under two paths in commit 44746da because the file was
+# added alongside a rename. Rotate via @BotFather.
+44746da9117d583edac42c63775920f72b1e9dfe:config/alertmanager/alertmanager.yml:telegram-bot-token-standalone:14
+44746da9117d583edac42c63775920f72b1e9dfe:config/alertmanager/alert_rules.yml:telegram-bot-token-standalone:14
+
+# --- *arr exporter API keys (3, later moved to .env.private) ------------------
+# Sonarr (L340), Radarr (L354), Bazarr (L367) — inline APIKEY values in the
+# exportarr service definitions before they were moved out of the compose file.
+# Lower impact (LAN-scoped apps) but still rotate: each grants full API control
+# of that app, including its download client settings.
+6510f3473b27b69e75ca54c40b25f7e93e3d408a:docker/docker-compose.pi0.yaml:generic-api-key:340
+6510f3473b27b69e75ca54c40b25f7e93e3d408a:docker/docker-compose.pi0.yaml:generic-api-key:354
+6510f3473b27b69e75ca54c40b25f7e93e3d408a:docker/docker-compose.pi0.yaml:generic-api-key:367

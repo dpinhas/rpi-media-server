@@ -42,6 +42,31 @@ jobs:
           reporter: github-pr-check
           fail_level: warning
 
+  gitleaks:
+    name: runner / gitleaks
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth: 0 is required — the scan covers full history, not just
+      # the PR diff, because a secret is exposed from the moment it is
+      # pushed regardless of which commit introduced it.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install gitleaks
+        run: |
+          set -euo pipefail
+          VERSION=8.30.1
+          curl -sSfL -o /tmp/gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_linux_x64.tar.gz"
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          sudo install -m 0755 /tmp/gitleaks /usr/local/bin/gitleaks
+          gitleaks version
+      # Known historical leaks are suppressed by fingerprint via
+      # .gitleaksignore. That file is pinned to specific commits, so the same
+      # credential reintroduced in a new commit still fails here.
+      - name: Scan git history for secrets
+        run: gitleaks git --no-banner --redact -c .gitleaks.toml --verbose .
+
   vault-encrypted:
     name: runner / vault-encrypted
     runs-on: ubuntu-latest
