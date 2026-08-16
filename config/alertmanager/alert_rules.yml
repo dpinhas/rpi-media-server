@@ -42,28 +42,39 @@ groups:
           summary: "Low memory on {{ $labels.instance }}"
           description: "Less than 20% memory available on {{ $labels.instance }}."
 
+      # Both Pi models begin thermal throttling at 80C, so that is the point at
+      # which performance is actually degraded. Uses node_thermal_zone_temp
+      # rather than node_hwmon_temp_celsius because hwmon exposes two identical
+      # series (temp0/temp1) per host, which would double-fire this alert.
       - alert: HighTemperature
-        expr: node_temperature_celsius > 75
-        for: 2m
+        expr: node_thermal_zone_temp{type="cpu-thermal"} > 80
+        for: 5m
         labels:
           severity: critical
           alertname: HighTemperature
         annotations:
           summary: "High temperature on {{ $labels.instance }}"
-          description: "Temperature on {{ $labels.instance }} is above 75°C for more than 2 minutes, indicating possible overheating."
+          description: "CPU temperature on {{ $labels.instance }} has been above 80C for more than 5 minutes and is likely being thermally throttled."
 
+      # group_left() is required: node_load1 carries a job label that the
+      # count() result does not, so default one-to-one matching returns nothing.
       - alert: HighLoad
-        expr: (node_load1 / count(node_cpu_seconds_total{mode="idle"}) * 100) > 80
-        for: 2m
+        expr: |
+          100 * (
+            node_load1
+            / on (instance) group_left ()
+            count by (instance) (node_cpu_seconds_total{mode="idle"})
+          ) > 80
+        for: 5m
         labels:
           severity: critical
           alertname: HighLoad
         annotations:
           summary: "High system load on {{ $labels.instance }}"
-          description: "System load on {{ $labels.instance }} is above 80% for more than 2 minutes."
+          description: "1-minute load average on {{ $labels.instance }} has exceeded 80% of available cores for more than 5 minutes."
 
       - alert: NodeDown
-        expr: up{job="node"} == 0
+        expr: up{job="node-exporter"} == 0
         for: 5m
         labels:
           severity: critical
@@ -72,3 +83,61 @@ groups:
           summary: "Node {{ $labels.instance }} is down"
           description: "The node {{ $labels.instance }} has been unreachable for more than 5 minutes."
 
+  - name: container-alerts
+    rules:
+      # cAdvisor stops exporting a container's series entirely once it is
+      # removed, so a staleness check on container_last_seen can never fire.
+      # Comparing the live container count against an hour ago is
+      # self-calibrating and needs no hardcoded list of expected containers.
+      # Trade-off: reports that a container vanished on a host, not which one.
+      - alert: ContainerGone
+        expr: |
+          count by (instance) (container_last_seen{name!=""})
+          < count by (instance) (container_last_seen{name!=""} offset 1h)
+        for: 10m
+        labels:
+          severity: critical
+          alertname: ContainerGone
+        annotations:
+          summary: "Container count dropped on {{ $labels.instance }}"
+          description: "{{ $labels.instance }} is running fewer containers than it was an hour ago. Check `docker ps -a` for a container that exited or was removed."
+
+      # restart: unless-stopped silently retries a failing container forever,
+      # so a crash loop is otherwise invisible.
+      - alert: ContainerRestartLoop
+        expr: changes(container_start_time_seconds{name!=""}[15m]) > 3
+        for: 5m
+        labels:
+          severity: warning
+          alertname: ContainerRestartLoop
+        annotations:
+          summary: "Container {{ $labels.name }} is restart looping on {{ $labels.instance }}"
+          description: "Container {{ $labels.name }} on {{ $labels.instance }} has restarted more than 3 times in 15 minutes."
+
+      # Neither Pi has swap, so an OOM kill is the most likely way a container
+      # dies. No `for:` because this is a discrete past event, not a state.
+      - alert: ContainerOOMKilled
+        expr: increase(container_oom_events_total{name!=""}[15m]) > 0
+        labels:
+          severity: critical
+          alertname: ContainerOOMKilled
+        annotations:
+          summary: "Container {{ $labels.name }} was OOM killed on {{ $labels.instance }}"
+          description: "Container {{ $labels.name }} on {{ $labels.instance }} hit an out-of-memory condition in the last 15 minutes."
+
+      # Inert until mem_limit is set on a container: cAdvisor reports
+      # container_spec_memory_limit_bytes as 0 when a container is unlimited,
+      # and the `> 0` guard is what keeps that from dividing to +Inf and
+      # firing for every container at once.
+      - alert: ContainerMemoryNearLimit
+        expr: |
+          container_memory_working_set_bytes{name!=""}
+          / container_spec_memory_limit_bytes{name!=""} > 0.9
+          and container_spec_memory_limit_bytes{name!=""} > 0
+        for: 10m
+        labels:
+          severity: warning
+          alertname: ContainerMemoryNearLimit
+        annotations:
+          summary: "Container {{ $labels.name }} near its memory limit on {{ $labels.instance }}"
+          description: "Container {{ $labels.name }} on {{ $labels.instance }} has been above 90% of its configured memory limit for more than 10 minutes."
