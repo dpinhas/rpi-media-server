@@ -8,6 +8,24 @@ nfs_export_options: "rw,sync,no_subtree_check"
 nfs_allowed_network: 192.168.68.0/24
 
 # Client settings
-nfs_server: "{{ duckdns_domain }}"
+#
+# Address the storage server by LAN IP, not by its public DuckDNS name. A
+# purely local mount should not depend on external DNS resolving, and the
+# hosts have always used the IP directly in /etc/fstab.
+nfs_server: "{{ hostvars[groups['storage_server'][0]].ansible_host }}"
 nfs_mount_path: "{{ data_path }}"
-nfs_mount_opts: defaults
+
+# Deliberately NOT `defaults`, which gives a hard foreground mount:
+#   soft     - an unreachable server returns an error instead of hanging
+#              processes in uninterruptible sleep (a hard mount makes even
+#              `docker stop` unkillable while the server is down)
+#   bg       - retry in the background rather than blocking boot
+#   _netdev  - wait for the network before attempting the mount
+# This matches what the hosts already run; `defaults` would silently degrade
+# a working mount on the next play.
+#
+# `intr` is retained purely to match the existing fstab byte-for-byte so this
+# role is idempotent and does not remount /mnt/data - Prometheus currently has
+# its TSDB open on that mount. The option has been a no-op since Linux 2.6.25
+# and should be dropped once the TSDB lives on local disk.
+nfs_mount_opts: "rw,soft,bg,intr,_netdev,auto"

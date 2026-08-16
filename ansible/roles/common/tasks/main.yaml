@@ -152,3 +152,7 @@
     create: true
     insertafter: EOF
   tags: [dotfiles]
+
+- name: Configure scheduled jobs
+  ansible.builtin.include_tasks: scheduled_jobs.yaml
+  tags: [cron]

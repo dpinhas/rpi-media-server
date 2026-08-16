@@ -3,3 +3,7 @@ docker_compose_file: "docker-compose.pi0.yaml"
 docker_env_file: .env
 docker_env_private_file: .env.private
 docker_env_combined_file: .env.combined
+
+# Auto-update cron. Off until config and runtime state are separated - see the
+# comment in tasks/auto_update.yaml for why enabling it now breaks silently.
+docker_auto_update_enabled: false
