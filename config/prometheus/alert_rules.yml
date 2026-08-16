@@ -153,3 +153,46 @@ groups:
         annotations:
           summary: "Container {{ $labels.name }} near its memory limit on {{ $labels.instance }}"
           description: "Container {{ $labels.name }} on {{ $labels.instance }} has been above 90% of its configured memory limit for more than 10 minutes."
+
+  # Monitoring self-health. Everything else in this file was inert for months
+  # because rule_files pointed at a path that did not resolve, and nothing
+  # reported that. These rules make the monitoring stack's own failures visible.
+  #
+  # Deliberately absent: a "zero rules loaded" alert. It would live in this file,
+  # so a total rule-loading failure would stop it loading too - the exact bug it
+  # aims to catch. That case needs an external dead-man's switch.
+  - name: monitoring-self-health
+    rules:
+      # Catches a bad prometheus.yml after an edit. Prometheus keeps serving the
+      # last good config, so without this a broken change is invisible.
+      - alert: PrometheusConfigReloadFailed
+        expr: prometheus_config_last_reload_successful == 0
+        for: 5m
+        labels:
+          severity: critical
+          alertname: PrometheusConfigReloadFailed
+        annotations:
+          summary: "Prometheus config reload failed on {{ $labels.instance }}"
+          description: "Prometheus is running on its last good config; the file on disk is rejected."
+
+      # Alerts are firing but not reaching Telegram - e.g. a revoked bot token.
+      # This is the check that would have caught the token rotation gap.
+      - alert: AlertmanagerNotificationsFailing
+        expr: increase(alertmanager_notifications_failed_total[15m]) > 0
+        for: 5m
+        labels:
+          severity: critical
+          alertname: AlertmanagerNotificationsFailing
+        annotations:
+          summary: "Alertmanager cannot deliver notifications via {{ $labels.integration }}"
+          description: "Alerts are being generated but delivery is failing. Check the bot token and network egress."
+
+      - alert: PrometheusRuleEvaluationFailing
+        expr: increase(prometheus_rule_evaluation_failures_total[15m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+          alertname: PrometheusRuleEvaluationFailing
+        annotations:
+          summary: "Prometheus rule evaluation failing on {{ $labels.instance }}"
+          description: "One or more rules error on evaluation, so their alerts cannot fire."
