@@ -2,8 +2,13 @@
 groups:
   - name: system-alerts
     rules:
+      # scrape_interval is 30s, so a [1m] window holds exactly 2 samples and a
+      # single missed scrape leaves too few to compute a rate, blanking the
+      # alert. [2m] holds 4, tolerating two missed scrapes. rate() rather than
+      # irate() because irate() only ever reads the last two samples, making it
+      # too spiky for a sustained-usage alert -- dips reset the `for` timer.
       - alert: HighCPUUsage
-        expr: 100 - (avg by (instance)(irate(node_cpu_seconds_total{mode="idle"}[1m])) * 100) > 80
+        expr: 100 - (avg by (instance)(rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100) > 80
         for: 2m
         labels:
           severity: warning
@@ -22,8 +27,15 @@ groups:
           summary: "Low disk space on {{ $labels.instance }}"
           description: "Less than 15% disk space remaining on root (/) of {{ $labels.instance }}."
 
+      # /mnt/data is the ext4 SSD on the storage host and an nfs4 mount of that
+      # same SSD on every NFS client, so node_exporter reports it once per host
+      # and this rule would alert twice for one condition. Excluding network
+      # filesystems keeps it to the host that physically owns the disk, and
+      # does so without naming a host, so it survives services moving between
+      # them. A broken NFS mount is a separate concern: the client's series
+      # disappears rather than crossing this threshold.
       - alert: LowSSDSpace
-        expr: (node_filesystem_avail_bytes{mountpoint="/mnt/data"} / node_filesystem_size_bytes{mountpoint="/mnt/data"}) < 0.05
+        expr: (node_filesystem_avail_bytes{mountpoint="/mnt/data", fstype!~"nfs.*"} / node_filesystem_size_bytes{mountpoint="/mnt/data", fstype!~"nfs.*"}) < 0.05
         for: 2m
         labels:
           severity: critical
