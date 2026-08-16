@@ -35,12 +35,18 @@
   when: inventory_hostname in groups['storage_server']
   tags: [nfs]
 
+# dump/passno are set explicitly to 0. The existing fstab carries `1 2`, which
+# asks dump to back up a network mount and fsck to check it at boot - both
+# meaningless for NFS. Applying this rewrites those two fields once; it changes
+# no mount option, so the filesystem is not remounted.
 - name: Mount NFS share from storage server
   ansible.posix.mount:
     path: "{{ nfs_mount_path }}"
     src: "{{ nfs_server }}:{{ nfs_mount_path }}"
     fstype: nfs
     opts: "{{ nfs_mount_opts }}"
+    dump: "0"
+    passno: "0"
     state: mounted
   when: inventory_hostname not in groups['storage_server']
   tags: [nfs]

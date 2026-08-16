@@ -52,25 +52,6 @@ services:
     command:
       - '--config.file=/config/blackbox.yml'
 
-  homebridge:
-    image: homebridge/homebridge:${HOMEBRIDGE_TAG}
-    network_mode: host
-    container_name: homebridge
-    restart: always
-    volumes:
-      - ${DATA_PATH}/config/homebridge:/homebridge
-    logging:
-      driver: json-file
-      options:
-        max-size: "${HOMEBRIDGE_LOG_MAX_SIZE}"
-        max-file: "${HOMEBRIDGE_LOG_MAX_FILE}"
-    environment:
-      - PGID=${PGID}
-      - PUID=${PUID}
-      - HOMEBRIDGE_CONFIG_UI=${HOMEBRIDGE_CONFIG_UI}
-      - HOMEBRIDGE_CONFIG_UI_PORT=${HOMEBRIDGE_CONFIG_UI_PORT}
-      - TZ=${TIMEZONE}
-
   node-exporter:
     image: prom/node-exporter:${NODE_EXPORTER_TAG}
     container_name: node-exporter

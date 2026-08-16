@@ -1,0 +1,62 @@
+---
+# Cron jobs that were installed by hand on the Pis and existed nowhere in this
+# repo. Declaring them here means `crontab -l` is no longer the only record of
+# what runs on a schedule.
+#
+# ONE-TIME MIGRATION, required before the first apply:
+#
+# The existing entries were written by hand and carry no `#Ansible: <name>`
+# marker, which is how this module identifies the crontab lines it owns. Applying
+# these tasks against an unmigrated host therefore ADDS a second copy of each
+# job rather than adopting the existing one, and both copies then run. Strip the
+# legacy lines first:
+#
+#   pi0:  crontab -l | grep -v 'cleanup_media_library.sh' | crontab -
+#   pi1:  crontab -l | grep -v 'get_directories_size.sh'  | crontab -
+#
+# Verify with `crontab -l` afterwards: each job should appear exactly once,
+# preceded by its `#Ansible:` comment.
+#
+# Not declared here, deliberately: pi0 has a `post-commit` git hook (installed
+# 2025-07-27 by scripts/setup-git-hooks.sh) that runs scripts/git-hook-update-pi1.sh
+# to push updates to pi1 over SSH. It lives in .git/hooks/, which is outside
+# version control, and it is slated for replacement rather than codification -
+# see the compose-project restructure. Documented here so it is not forgotten.
+
+- name: Prune media library directories with no video files (storage host)
+  ansible.builtin.cron:
+    name: "Prune empty media library directories"
+    user: "{{ pi_user }}"
+    minute: "0"
+    hour: "10"
+    job: >-
+      {{ repo_path }}/scripts/cleanup_media_library.sh
+      --path {{ data_path }}/library/
+      >> {{ pi_home }}/cleanup_media_library.log 2>&1
+    state: present
+  when: inventory_hostname in groups['storage_server']
+  tags: [cron]
+
+# Writes node_directory_size_bytes into config/custom_metrics/, which
+# node-exporter picks up via --collector.textfile.directory. Scoped to the
+# monitoring group rather than a hostname so it follows the stack if it moves.
+- name: Publish media library directory sizes as node-exporter metrics
+  ansible.builtin.cron:
+    name: "Publish directory size metrics"
+    user: "{{ pi_user }}"
+    minute: "0"
+    job: "{{ repo_path }}/scripts/get_directories_size.sh"
+    state: present
+  when: inventory_hostname in groups['monitoring'] | default([])
+  tags: [cron]
+
+- name: Ensure scheduled scripts are executable
+  ansible.builtin.file:
+    path: "{{ repo_path }}/scripts/{{ item }}"
+    mode: "0755"
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+  loop:
+    - cleanup_media_library.sh
+    - get_directories_size.sh
+  tags: [cron]

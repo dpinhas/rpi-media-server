@@ -17,10 +17,22 @@
     owner: "{{ pi_user }}"
     group: "{{ pi_user }}"
 
+# Disabled by default, and absent from both Pis despite having been merged.
+#
+# auto_pull.sh runs `git pull` under `set -e`, so it dies on any host whose
+# working tree has local modifications to a file the incoming commits touch.
+# pi0's tree is permanently dirty because zigbee2mqtt rewrites
+# config/zigbee2mqtt/configuration.yaml whenever a device is paired - the repo
+# tracks a file the container owns. Until config and runtime state are
+# separated, enabling this produces an updater that fails silently and a stack
+# that stops receiving updates without anyone noticing.
+#
+# Set docker_auto_update_enabled: true once that split is done, and pair it
+# with an alert on updater log staleness so a broken updater is visible.
 - name: Deploy auto-update cron job for main branch
   ansible.builtin.cron:
     name: "Auto-pull and update rpi-media-server"
     user: "{{ pi_user }}"
     minute: "*/5"
     job: "{{ repo_path }}/scripts/auto_pull.sh"
-    state: present
+    state: "{{ 'present' if docker_auto_update_enabled | bool else 'absent' }}"
