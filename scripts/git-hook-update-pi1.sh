@@ -7,8 +7,6 @@ set -e
 
 # Configuration
 PI1_HOST="pi1"
-PI1_USER="pi"
-REPO_PATH="/home/pi/rpi-media-server"
 AUTO_UPDATE_BRANCHES=("main" "master" "develop")  # Branches that trigger auto-update
 UPDATE_SCRIPT_PATH="$(dirname "$0")/update_pi1.sh"
 
@@ -104,7 +102,8 @@ main() {
     check_git_repo
     
     # Get current branch
-    local current_branch=$(get_current_branch)
+    local current_branch
+    current_branch=$(get_current_branch)
     print_status "Current branch: $current_branch"
     
     # Check if this branch should trigger auto-update

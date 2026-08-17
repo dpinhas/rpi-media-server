@@ -53,6 +53,9 @@ update_pi1() {
     print_status "Starting update process for $PI1_HOST..."
     
     # SSH into pi1 and perform the update
+    # shellcheck disable=SC2087  # expansion side is deliberate: $BRANCH and
+    # $REPO_PATH are local and must expand here, while \$current_branch is
+    # escaped so it expands on pi1. Quoting EOF would break both.
     ssh "$PI1_USER@$PI1_HOST" << EOF
         set -e
         
@@ -115,6 +118,9 @@ EOF
 verify_update() {
     print_status "Verifying update on $PI1_HOST..."
     
+    # shellcheck disable=SC2087  # expansion side is deliberate: $BRANCH and
+    # $REPO_PATH are local and must expand here, while \$current_branch is
+    # escaped so it expands on pi1. Quoting EOF would break both.
     ssh "$PI1_USER@$PI1_HOST" << EOF
         cd $REPO_PATH
         

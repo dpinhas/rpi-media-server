@@ -28,10 +28,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          # reviewdog needs the merge base to work out which lines are new; a
-          # shallow clone can leave it reporting every pre-existing finding.
-          fetch-depth: 0
       - name: shellcheck
         uses: reviewdog/action-shellcheck@v1
         with:
