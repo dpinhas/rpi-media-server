@@ -52,7 +52,10 @@ services:
       - "${BLACKBOX_PORT}:9115"
     restart: always
     volumes:
-      - ${PWD}/../config/blackbox.yml:/config/blackbox.yml
+      # Directory, not a single file: git pull replaces files with new inodes,
+      # which a single-file bind mount does not follow, so the container would
+      # keep serving the pre-pull copy indefinitely.
+      - ${PWD}/../config/blackbox:/config:ro
     sysctls:
       net.ipv4.ping_group_range: "0 2147483647"
     command:
@@ -99,4 +102,5 @@ services:
     ports:
       - "${PING_EXPORTER_PORT}:9427"
     volumes:
-      - ${PWD}/../config/ping_exporter.yml:/config/config.yml
+      # Directory mount for the same inode reason as blackbox above.
+      - ${PWD}/../config/ping_exporter:/config:ro

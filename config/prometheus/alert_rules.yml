@@ -196,3 +196,80 @@ groups:
         annotations:
           summary: "Prometheus rule evaluation failing on {{ $labels.instance }}"
           description: "One or more rules error on evaluation, so their alerts cannot fire."
+
+  # Blackbox probes. 19 targets were being scraped every 30s with no rule
+  # watching any of them: a public service could go down, or a certificate
+  # lapse, and nothing would say so.
+  #
+  # NOTE on blast radius: the HTTPS probes resolve public DNS and traverse the
+  # WAN, so a router or internet outage fails all ten at once even though the
+  # services are healthy locally. Alertmanager groups them into one message;
+  # read a full sweep as "connectivity", not "ten broken services".
+  - name: blackbox-alerts
+    rules:
+      - alert: EndpointDown
+        expr: probe_success{job="blackbox-http"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          alertname: EndpointDown
+        annotations:
+          summary: "{{ $labels.instance }} is not responding"
+          description: "The HTTPS probe for {{ $labels.instance }} has failed for more than 5 minutes. Check the container, then Traefik's routing."
+
+      # Traefik renews Let's Encrypt certificates at 30 days remaining. Under
+      # 14 means a renewal window has already been missed, which is what a bad
+      # DuckDNS token looks like - the failure is otherwise silent until expiry.
+      - alert: CertificateExpiringSoon
+        expr: (probe_ssl_earliest_cert_expiry{job="blackbox-http"} - time()) / 86400 < 14
+        for: 1h
+        labels:
+          severity: warning
+          alertname: CertificateExpiringSoon
+        annotations:
+          summary: "Certificate for {{ $labels.instance }} expires in under 14 days"
+          description: "Traefik should have renewed at 30 days. Check the ACME DNS-01 challenge and that DUCKDNS_TOKEN is current."
+
+      - alert: CertificateExpiringCritical
+        expr: (probe_ssl_earliest_cert_expiry{job="blackbox-http"} - time()) / 86400 < 3
+        for: 15m
+        labels:
+          severity: critical
+          alertname: CertificateExpiringCritical
+        annotations:
+          summary: "Certificate for {{ $labels.instance }} expires in under 3 days"
+          description: "Browsers will start refusing this host. Renew manually if Traefik cannot."
+
+      # Every external resolver unreachable at once means connectivity is gone,
+      # not that five DNS providers failed simultaneously.
+      - alert: InternetUnreachable
+        expr: avg(probe_success{job="blackbox", group="external_network"}) == 0
+        for: 5m
+        labels:
+          severity: critical
+          alertname: InternetUnreachable
+        annotations:
+          summary: "No external host is reachable"
+          description: "All external ICMP targets are failing - WAN or router outage. Expect HTTPS probe alerts alongside this."
+
+      - alert: LanHostUnreachable
+        expr: probe_success{job="blackbox", group="internal_network"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          alertname: LanHostUnreachable
+        annotations:
+          summary: "LAN host {{ $labels.instance }} is unreachable"
+          description: "ICMP to {{ $labels.instance }} is failing from the monitoring host."
+
+      # Covers NFS (2049) and SSH (22) on the storage host. NFS failing is
+      # worse than it looks: pi1 mounts /mnt/data from it.
+      - alert: TcpServiceDown
+        expr: probe_success{job="blackbox-tcp"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          alertname: TcpServiceDown
+        annotations:
+          summary: "TCP service {{ $labels.instance }} is not accepting connections"
+          description: "If this is port 2049, pi1's NFS mount of /mnt/data is affected."
