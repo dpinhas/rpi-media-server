@@ -1,8 +1,9 @@
 ---
+# NOTE: ssd_device_pattern / ssd_mount_path / ssd_mount_opts are deliberately
+# NOT defaulted here. They are set in inventory/group_vars/storage_server.yaml,
+# which outranks role defaults, so the copies that used to live here could never
+# take effect - two places to change one value, one of them inert.
 # Server settings
-ssd_device_pattern: sda
-ssd_mount_path: /mnt/data
-ssd_mount_opts: "defaults,noatime"
 nfs_export_path: /mnt/data
 nfs_export_options: "rw,sync,no_subtree_check"
 nfs_allowed_network: 192.168.68.0/24

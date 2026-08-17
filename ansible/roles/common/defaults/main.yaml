@@ -10,4 +10,5 @@ common_packages:
   - nfs-common
   - needrestart
 
-pi_locale: en_US.UTF-8
+# pi_locale is set in inventory/group_vars/all/vars.yaml, which outranks role
+# defaults; a copy here would never be used.

@@ -1,7 +1,10 @@
 ---
+# pipefail matters here: without it a failing blkid or grep still exits 0 via
+# awk, producing an empty UUID that the next task would mount as "UUID=".
 - name: Get UUID of SSD
   ansible.builtin.shell:
-    cmd: blkid | grep {{ ssd_device_pattern }} | awk -F '"' '{print $2}'
+    cmd: set -o pipefail && blkid | grep {{ ssd_device_pattern }} | awk -F '"' '{print $2}'
+    executable: /bin/bash
   register: ssd_uuid_result
   changed_when: false
   when: inventory_hostname in groups['storage_server']

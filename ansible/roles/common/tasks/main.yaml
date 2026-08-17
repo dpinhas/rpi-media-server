@@ -52,9 +52,13 @@
   changed_when: false
   tags: [system]
 
+# command, not shell: no pipes or redirection are used. changed_when is true
+# because the `when` guard already means this only runs when the locale differs.
 - name: Set locale
-  ansible.builtin.shell: raspi-config nonint do_change_locale {{ pi_locale }}
+  ansible.builtin.command:
+    cmd: raspi-config nonint do_change_locale {{ pi_locale }}
   when: pi_locale not in current_locale.stdout
+  changed_when: true
   tags: [system]
 
 - name: Install common packages
@@ -69,6 +73,8 @@
     line: "alias ll='ls -lh --color --group-directories-first'"
     create: true
     owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+    mode: "0644"
   tags: [dotfiles]
 
 - name: Deploy .vimrc
@@ -164,6 +170,7 @@
     state: directory
     owner: "{{ pi_user }}"
     group: "{{ pi_user }}"
+    mode: "0755"
   tags: [storage]
 
 - name: Add DATA_PATH to bashrc
@@ -172,6 +179,9 @@
     line: "export DATA_PATH='{{ data_path }}/'"
     state: present
     create: true
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+    mode: "0644"
     insertafter: EOF
   tags: [dotfiles]
 
