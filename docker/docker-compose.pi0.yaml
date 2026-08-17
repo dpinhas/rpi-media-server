@@ -6,7 +6,11 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ${DATA_PATH}/config/letsencrypt:/letsencrypt
-      - ${PWD}/../config/traefik/dynamic.yaml:/etc/traefik/dynamic.yaml
+      # Directory, not a single file. A single-file bind mount follows the
+      # original inode and git pull replaces files, so edits to dynamic.yaml
+      # would silently not reach Traefik until the container was recreated.
+      # Read-only: Traefik writes only to /letsencrypt.
+      - ${PWD}/../config/traefik:/etc/traefik:ro
     ports:
       - "80:80"
       - "8080:8080"
@@ -378,6 +382,12 @@ services:
     image: ghcr.io/home-assistant/home-assistant:stable
     volumes:
       - ${DATA_PATH}/config/homeassistant:/config
+      # NOTE: the three files below are still single-file mounts and carry the
+      # stale-inode bug. They cannot be fixed with a directory mount because
+      # they overlay /config, which is Home Assistant's own state directory -
+      # mounting a directory would hide .storage and lose the instance.
+      # Home Assistant also rewrites scenes.yaml from its UI editor, so this
+      # needs the config/state separation, not a mount change.
       - ${PWD}/../config/homeassistant/configuration.yaml:/config/configuration.yaml
       - ${PWD}/../config/homeassistant/scenes.yaml:/config/scenes.yaml
       - ${PWD}/../config/homeassistant/ui-lovelace.yaml:/config/ui-lovelace.yaml

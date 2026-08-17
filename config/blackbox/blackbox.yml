@@ -1,3 +1,4 @@
+---
 modules:
   icmp:
     prober: icmp

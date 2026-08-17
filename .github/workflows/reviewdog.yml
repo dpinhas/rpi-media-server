@@ -1,6 +1,15 @@
 name: reviewdog
 on: [pull_request]
 
+# reviewdog's github-pr-check reporter posts a Check Run, which needs
+# checks: write. Without a permissions block the workflow inherits the repo
+# default; if that is read-only every reviewdog job fails while plain `run:`
+# jobs pass - exactly the split seen on PR #57.
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 jobs:
   yamllint:
     name: runner / yamllint
