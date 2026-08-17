@@ -96,6 +96,28 @@
     mode: "0700"
   tags: [dotfiles, ssh]
 
+# Guard, not a deployment. The key is already present on both Pis and is
+# deliberately NOT copied here - distributing a private key on every play is
+# unnecessary when it exists, and this repo should never carry key material.
+# What this catches is the actual failure: naming an IdentityFile that does not
+# exist, which silently yields "Permission denied (publickey)" on every git
+# fetch. pi0 sat unable to pull for months because of exactly that.
+- name: Check the git SSH identity exists
+  ansible.builtin.stat:
+    path: "{{ ssh_git_identity }}"
+  register: ssh_git_identity_stat
+  tags: [dotfiles, ssh]
+
+- name: Fail if the git SSH identity is missing
+  ansible.builtin.fail:
+    msg: >-
+      {{ ssh_git_identity }} does not exist on {{ inventory_hostname }}. The
+      ssh_config would pin a nonexistent key and every git-over-SSH operation
+      would fail with "Permission denied (publickey)". Copy the key into place,
+      or override ssh_git_identity for this host.
+  when: not ssh_git_identity_stat.stat.exists
+  tags: [dotfiles, ssh]
+
 - name: Deploy SSH client config
   ansible.builtin.template:
     src: ssh_config.j2
