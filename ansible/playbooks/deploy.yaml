@@ -31,3 +31,9 @@
     - role: alertmanager
       tags: [alertmanager]
       when: inventory_hostname in groups['monitoring'] | default([])
+
+    # Each host watches its peers and reports to Telegram. Prometheus covers
+    # pi0 via NodeDown, but nothing covered pi1 - an observer cannot report
+    # its own death.
+    - role: peer_watch
+      tags: [peer_watch]

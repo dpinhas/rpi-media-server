@@ -1,0 +1,27 @@
+---
+# Each host watches its peers and reports failures to Telegram directly.
+#
+# This exists because an observer cannot report its own death. Prometheus runs
+# on pi1 and its NodeDown rule covers pi0, but nothing covers pi1 - so pi1
+# failing was invisible. A cron on the *peer* closes that, with no third-party
+# service and no new credentials: it reuses the Telegram bot already in vault.
+#
+# Not covered, deliberately: both hosts down at once (power cut, router or WAN
+# failure). Neither host can report that, and it is self-evident at home.
+
+# cAdvisor's health endpoint. Chosen over ping or node-exporter because cAdvisor
+# talks to docker.sock, so a 200 proves the Docker daemon is answering - not
+# merely that the host is up. pi0's stack was down for 8 hours while the host
+# itself was perfectly reachable.
+peer_watch_check_port: 8081
+peer_watch_check_path: /healthz
+
+peer_watch_minute: "*/10"
+peer_watch_timeout: 10
+peer_watch_script_path: /usr/local/bin/rpi-media-server-peer-watch
+peer_watch_state_dir: /var/lib/rpi-media-server
+peer_watch_log_file: /var/log/rpi-media-server-peer-watch.log
+
+# Reuses the existing Alertmanager bot rather than introducing a new one.
+peer_watch_bot_token: "{{ vault_telegram_bot_token }}"
+peer_watch_chat_id: "{{ vault_telegram_chat_id }}"

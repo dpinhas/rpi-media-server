@@ -1,0 +1,50 @@
+#!/bin/bash
+# {{ ansible_managed }}
+#
+# Checks each peer host and reports state CHANGES to Telegram. Run from cron on
+# every host, so each is watched by someone other than itself.
+#
+# State is tracked in a flag file per peer so a host that stays down produces one
+# alert rather than one every {{ peer_watch_minute }} minutes, and a recovery is
+# reported explicitly - otherwise "no more alerts" is ambiguous between fixed and
+# still-broken-but-I-gave-up.
+
+set -uo pipefail
+
+STATE_DIR={{ peer_watch_state_dir }}
+LOG={{ peer_watch_log_file }}
+TIMEOUT={{ peer_watch_timeout }}
+
+log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" >>"$LOG"; }
+
+notify() {
+  # --data-urlencode so a message containing & or = cannot corrupt the request.
+  curl -fsS -m 20 --retry 2 --retry-delay 5 -o /dev/null \
+    "https://api.telegram.org/bot{{ peer_watch_bot_token }}/sendMessage" \
+    --data-urlencode "chat_id={{ peer_watch_chat_id }}" \
+    --data-urlencode "text=$1" \
+    || log "WARNING: could not reach Telegram to report: $1"
+}
+
+{% for peer in groups['rpi'] | reject('equalto', inventory_hostname) | sort %}
+{% set peer_ip = hostvars[peer].ansible_host | default(peer) %}
+# --- {{ peer }} ({{ peer_ip }}) ---
+FLAG="$STATE_DIR/peer-down-{{ peer }}"
+URL="http://{{ peer_ip }}:{{ peer_watch_check_port }}{{ peer_watch_check_path }}"
+
+if curl -fsS -m "$TIMEOUT" -o /dev/null "$URL" 2>/dev/null; then
+  if [ -f "$FLAG" ]; then
+    down_since=$(cat "$FLAG" 2>/dev/null || echo unknown)
+    log "{{ peer }} recovered (was down since $down_since)"
+    notify "✅ {{ peer }} is back up (was down since $down_since, seen from {{ inventory_hostname }})"
+    rm -f "$FLAG"
+  fi
+else
+  if [ ! -f "$FLAG" ]; then
+    date '+%Y-%m-%d %H:%M:%S' >"$FLAG"
+    log "{{ peer }} is DOWN ($URL unreachable)"
+    notify "🔴 {{ peer }} is not responding on $URL (seen from {{ inventory_hostname }}). Docker may be stopped or the host is down."
+  fi
+fi
+
+{% endfor %}
