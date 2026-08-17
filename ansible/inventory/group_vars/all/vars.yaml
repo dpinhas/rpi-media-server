@@ -33,3 +33,12 @@ common_packages:
   - python3-pip
   - nfs-common
   - needrestart
+
+# SSH identity the Pis use for git-over-SSH to GitHub. This key is already
+# present on both hosts (same key as the control node's
+# ~/.ssh/personal/id_ed25519). Overridable per host if they ever diverge.
+#
+# Must be a path that EXISTS: naming an IdentityFile replaces OpenSSH's default
+# candidate list rather than adding to it, so a wrong path means no usable key
+# is offered at all.
+ssh_git_identity: "{{ pi_home }}/.ssh/id_ed25519"

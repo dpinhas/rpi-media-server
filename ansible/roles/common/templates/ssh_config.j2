@@ -9,21 +9,31 @@
 # GitHub — strict. Host keys are pre-seeded into known_hosts by the
 # `common` role (see tasks/main.yaml :: Pin GitHub host keys), so this
 # never prompts and never silently trusts a new key.
+#
+# IdentitiesOnly stops OpenSSH offering every other key it can find; combined
+# with an explicit IdentityFile that is the whole point of pinning. NOTE that
+# naming an IdentityFile REPLACES the default candidate list rather than adding
+# to it - this previously pointed at ~/.ssh/id_rsa, which does not exist on pi0,
+# so no usable key was ever offered and pi0 could not pull from GitHub at all.
 Host github.com
   HostName github.com
   User git
   StrictHostKeyChecking yes
-  IdentityFile ~/.ssh/id_rsa
+  IdentitiesOnly yes
+  IdentityFile {{ ssh_git_identity }}
 
 # Pi-to-Pi on the trusted LAN. `accept-new` trusts a key on first contact
 # (so no manual seeding is needed for a rebuilt Pi) but still REFUSES a key
 # that has changed — unlike `no`, which accepts any key silently. Known
 # hosts are recorded normally rather than discarded to /dev/null.
+#
+# No IdentityFile here: the two Pis do not have an identical key inventory, so
+# pinning one path breaks whichever host lacks it. Letting OpenSSH try its
+# defaults keeps pi0's post-commit hook working regardless of which key is
+# present.
 Host {% for h in groups['rpi'] | sort %}{{ h }} {{ hostvars[h].ansible_host | default(h) }}{{ " " if not loop.last }}{% endfor %}
 
   StrictHostKeyChecking accept-new
-  IdentityFile ~/.ssh/id_rsa
 
-# Everything else: OpenSSH defaults (strict on changed keys, prompt on new).
-Host *
-  IdentityFile ~/.ssh/id_rsa
+# Everything else: OpenSSH defaults (strict on changed keys, prompt on new,
+# and all default identity files considered).
