@@ -32,6 +32,6 @@ else
   exit 1
 fi
 printf "${GREEN}%-15s${CYAN}%-30s${RESET}\n" "Env File:" "${ENV_FILE}"
-pushd docker
+pushd docker || exit 1
 docker compose -f "$COMPOSE_FILE" --env-file "$ENV_FILE" "$@"
-popd
+popd || exit 1

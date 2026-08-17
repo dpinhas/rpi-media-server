@@ -5,7 +5,7 @@
   ansible.builtin.shell:
     cmd: set -o pipefail && blkid | grep {{ ssd_device_pattern }} | awk -F '"' '{print $2}'
     executable: /bin/bash
-  register: ssd_uuid_result
+  register: nfs_ssd_uuid_result
   changed_when: false
   when: inventory_hostname in groups['storage_server']
   tags: [nfs, storage]
@@ -13,7 +13,7 @@
 - name: Mount SSD storage
   ansible.posix.mount:
     path: "{{ ssd_mount_path }}"
-    src: "UUID={{ ssd_uuid_result.stdout }}"
+    src: "UUID={{ nfs_ssd_uuid_result.stdout }}"
     fstype: ext4
     opts: "{{ ssd_mount_opts }}"
     state: mounted

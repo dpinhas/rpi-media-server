@@ -28,6 +28,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # reviewdog needs the merge base to work out which lines are new; a
+          # shallow clone can leave it reporting every pre-existing finding.
+          fetch-depth: 0
       - name: shellcheck
         uses: reviewdog/action-shellcheck@v1
         with:
@@ -56,6 +60,10 @@ jobs:
           # Kubernetes manifests, compose files and service configs that are
           # not Ansible content at all. yamllint already covers those.
           workdir: ansible
+          # Pinned: 26.8.0 extended var-naming to register/set_fact vars, which
+          # turned a green build red with no repo change. An unpinned linter
+          # means CI behaviour changes under you.
+          ansiblelint_version: "26.8.0"
 
   gitleaks:
     name: runner / gitleaks
