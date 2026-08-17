@@ -23,16 +23,21 @@ receivers:
     telegram_configs:
       - bot_token_file: '{{ alertmanager_container_config_dir }}/{{ alertmanager_bot_token_filename }}'
         chat_id: {{ vault_telegram_chat_id }}
-        parse_mode: 'Markdown'
+        # HTML, not Markdown. Alert text routinely contains metric names such as
+        # node_filesystem_avail_bytes; Markdown reads a lone underscore as an
+        # unclosed italic and Telegram rejects the ENTIRE message with
+        # "can't parse entities", so the alert is silently never delivered.
+        # HTML only reserves < > &, which the labels below cannot contain.
+        parse_mode: 'HTML'
         # NOTE: Go template syntax below — {% raw %}{{ }}{% endraw %} is evaluated by
         # Alertmanager at notify time, not by Jinja2 at render time. The raw
         # block prevents Ansible from interpreting it. The tags are placed
         # INLINE with the content (not on their own lines) so trim_blocks
         # cannot introduce a leading blank line into the message body.
         message: |
-{% raw %}          *🔥 Alert: {{ .CommonLabels.alertname }}*
-          *Status:* {{ .Status }}
-          *Instance:* {{ .CommonLabels.instance }}
-          *Summary:* {{ .CommonAnnotations.summary }}
-          *Description:* {{ .CommonAnnotations.description }}{% endraw %}
+{% raw %}          <b>🔥 Alert: {{ .CommonLabels.alertname }}</b>
+          <b>Status:</b> {{ .Status }}
+          <b>Instance:</b> {{ .CommonLabels.instance }}
+          <b>Summary:</b> {{ .CommonAnnotations.summary }}
+          <b>Description:</b> {{ .CommonAnnotations.description }}{% endraw %}
 

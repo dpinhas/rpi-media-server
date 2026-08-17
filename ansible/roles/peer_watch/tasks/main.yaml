@@ -48,7 +48,7 @@
 
 - name: Schedule the peer watch
   ansible.builtin.cron:
-    name: "rpi-media-server peer watch"
+    name: "peer watch"
     user: root
     minute: "{{ peer_watch_minute }}"
     job: "{{ peer_watch_script_path }}"
