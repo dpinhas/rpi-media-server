@@ -1,0 +1,57 @@
+---
+- name: Assert the Telegram bot is available from vault
+  ansible.builtin.assert:
+    that:
+      - vault_telegram_bot_token is defined
+      - vault_telegram_bot_token | length > 0
+      - vault_telegram_chat_id is defined
+    fail_msg: >-
+      vault_telegram_bot_token / vault_telegram_chat_id are not defined. This
+      role reuses the same bot as Alertmanager - populate
+      ansible/inventory/group_vars/all/vault.yaml and pass --vault-password-file.
+  tags: [peer_watch, secrets]
+
+- name: Create state directory
+  ansible.builtin.file:
+    path: "{{ peer_watch_state_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+  become: true
+  tags: [peer_watch]
+
+- name: Ensure log file exists
+  ansible.builtin.file:
+    path: "{{ peer_watch_log_file }}"
+    state: touch
+    owner: root
+    group: root
+    mode: "0640"
+    modification_time: preserve
+    access_time: preserve
+  become: true
+  tags: [peer_watch]
+
+# 0700 and root-owned: the rendered script embeds the bot token, so it must not
+# be world-readable. no_log keeps the token out of ansible output on failure.
+- name: Deploy the peer watch script
+  ansible.builtin.template:
+    src: peer-watch.sh.j2
+    dest: "{{ peer_watch_script_path }}"
+    owner: root
+    group: root
+    mode: "0700"
+  become: true
+  no_log: true
+  tags: [peer_watch]
+
+- name: Schedule the peer watch
+  ansible.builtin.cron:
+    name: "rpi-media-server peer watch"
+    user: root
+    minute: "{{ peer_watch_minute }}"
+    job: "{{ peer_watch_script_path }}"
+    state: present
+  become: true
+  tags: [peer_watch, cron]
