@@ -50,6 +50,16 @@ jobs:
           github_token: ${{ secrets.github_token }}
           reporter: github-pr-check
           fail_level: warning
+          # Run from ansible/, not the repo root. ansible.cfg lives there and
+          # sets roles_path=roles, so at the root every role fails to resolve
+          # (syntax-check[specific]) and 96 findings are raised against
+          # Kubernetes manifests, compose files and service configs that are
+          # not Ansible content at all. yamllint already covers those.
+          workdir: ansible
+          # Pinned: 26.8.0 extended var-naming to register/set_fact vars, which
+          # turned a green build red with no repo change. An unpinned linter
+          # means CI behaviour changes under you.
+          ansiblelint_version: "26.8.0"
 
   gitleaks:
     name: runner / gitleaks

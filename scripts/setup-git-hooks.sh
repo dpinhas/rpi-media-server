@@ -40,7 +40,8 @@ check_git_repo() {
 setup_post_push_hook() {
     local hook_dir=".git/hooks"
     local hook_file="$hook_dir/post-push"
-    local script_path="$(pwd)/scripts/git-hook-update-pi1.sh"
+    local script_path
+    script_path="$(pwd)/scripts/git-hook-update-pi1.sh"
     
     print_status "Setting up post-push hook..."
     
@@ -64,7 +65,8 @@ EOF
 setup_post_commit_hook() {
     local hook_dir=".git/hooks"
     local hook_file="$hook_dir/post-commit"
-    local script_path="$(pwd)/scripts/git-hook-update-pi1.sh"
+    local script_path
+    script_path="$(pwd)/scripts/git-hook-update-pi1.sh"
     
     print_status "Setting up post-commit hook..."
     
@@ -91,7 +93,8 @@ EOF
 setup_pre_push_hook() {
     local hook_dir=".git/hooks"
     local hook_file="$hook_dir/pre-push"
-    local script_path="$(pwd)/scripts/git-hook-update-pi1.sh"
+    local script_path
+    script_path="$(pwd)/scripts/git-hook-update-pi1.sh"
     
     print_status "Setting up pre-push hook..."
     
@@ -123,7 +126,8 @@ EOF
 setup_post_receive_hook() {
     local hook_dir=".git/hooks"
     local hook_file="$hook_dir/post-receive"
-    local script_path="$(pwd)/scripts/git-hook-update-pi1.sh"
+    local script_path
+    script_path="$(pwd)/scripts/git-hook-update-pi1.sh"
     
     print_status "Setting up post-receive hook..."
     

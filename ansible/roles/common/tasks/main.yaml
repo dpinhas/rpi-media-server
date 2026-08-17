@@ -9,30 +9,30 @@
 
 - name: Check if reboot is required
   ansible.builtin.command: needrestart -b
-  register: reboot_required
+  register: common_reboot_required
   changed_when: false
   failed_when: false
   tags: [system]
 
 - name: Check if running locally
   ansible.builtin.set_fact:
-    is_local: "{{ ansible_connection == 'local' or inventory_hostname in ['localhost', '127.0.0.1', ansible_hostname] }}"
+    common_is_local: "{{ ansible_connection == 'local' or inventory_hostname in ['localhost', '127.0.0.1', ansible_hostname] }}"
   tags: [system]
 
 - name: Warn about pending reboot (local run)
   ansible.builtin.debug:
     msg: "Reboot is required but skipped — running locally. Reboot manually when ready."
   when:
-    - is_local | bool
-    - "'NEEDRESTART-KSTA: 2' in reboot_required.stdout or 'NEEDRESTART-KSTA: 3' in reboot_required.stdout"
+    - common_is_local | bool
+    - "'NEEDRESTART-KSTA: 2' in common_reboot_required.stdout or 'NEEDRESTART-KSTA: 3' in common_reboot_required.stdout"
   tags: [system, reboot]
 
 - name: Reboot if required (remote run)
   ansible.builtin.reboot:
     reboot_timeout: 120
   when:
-    - not is_local | bool
-    - "'NEEDRESTART-KSTA: 2' in reboot_required.stdout or 'NEEDRESTART-KSTA: 3' in reboot_required.stdout"
+    - not common_is_local | bool
+    - "'NEEDRESTART-KSTA: 2' in common_reboot_required.stdout or 'NEEDRESTART-KSTA: 3' in common_reboot_required.stdout"
   tags: [system, reboot]
 
 - name: Set hostname
@@ -42,19 +42,23 @@
       raspi-config nonint do_hostname {{ inventory_hostname }}
       echo "changed"
     fi
-  register: hostname_result
-  changed_when: "'changed' in hostname_result.stdout"
+  register: common_hostname_result
+  changed_when: "'changed' in common_hostname_result.stdout"
   tags: [system]
 
 - name: Get current locale
   ansible.builtin.command: localectl status
-  register: current_locale
+  register: common_current_locale
   changed_when: false
   tags: [system]
 
+# command, not shell: no pipes or redirection are used. changed_when is true
+# because the `when` guard already means this only runs when the locale differs.
 - name: Set locale
-  ansible.builtin.shell: raspi-config nonint do_change_locale {{ pi_locale }}
-  when: pi_locale not in current_locale.stdout
+  ansible.builtin.command:
+    cmd: raspi-config nonint do_change_locale {{ pi_locale }}
+  when: pi_locale not in common_current_locale.stdout
+  changed_when: true
   tags: [system]
 
 - name: Install common packages
@@ -69,6 +73,8 @@
     line: "alias ll='ls -lh --color --group-directories-first'"
     create: true
     owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+    mode: "0644"
   tags: [dotfiles]
 
 - name: Deploy .vimrc
@@ -105,7 +111,7 @@
 - name: Check the git SSH identity exists
   ansible.builtin.stat:
     path: "{{ ssh_git_identity }}"
-  register: ssh_git_identity_stat
+  register: common_ssh_git_identity_stat
   tags: [dotfiles, ssh]
 
 - name: Fail if the git SSH identity is missing
@@ -115,7 +121,7 @@
       ssh_config would pin a nonexistent key and every git-over-SSH operation
       would fail with "Permission denied (publickey)". Copy the key into place,
       or override ssh_git_identity for this host.
-  when: not ssh_git_identity_stat.stat.exists
+  when: not common_ssh_git_identity_stat.stat.exists
   tags: [dotfiles, ssh]
 
 - name: Deploy SSH client config
@@ -134,7 +140,7 @@
   ansible.builtin.uri:
     url: https://api.github.com/meta
     return_content: true
-  register: github_meta
+  register: common_github_meta
   changed_when: false
   check_mode: false
   tags: [dotfiles, ssh]
@@ -145,7 +151,7 @@
     name: github.com
     key: "github.com {{ item }}"
     state: present
-  loop: "{{ github_meta.json.ssh_keys }}"
+  loop: "{{ common_github_meta.json.ssh_keys }}"
   become: true
   become_user: "{{ pi_user }}"
   tags: [dotfiles, ssh]
@@ -164,6 +170,7 @@
     state: directory
     owner: "{{ pi_user }}"
     group: "{{ pi_user }}"
+    mode: "0755"
   tags: [storage]
 
 - name: Add DATA_PATH to bashrc
@@ -172,6 +179,9 @@
     line: "export DATA_PATH='{{ data_path }}/'"
     state: present
     create: true
+    owner: "{{ pi_user }}"
+    group: "{{ pi_user }}"
+    mode: "0644"
     insertafter: EOF
   tags: [dotfiles]
 
