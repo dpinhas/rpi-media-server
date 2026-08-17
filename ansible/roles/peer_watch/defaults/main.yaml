@@ -18,9 +18,9 @@ peer_watch_check_path: /healthz
 
 peer_watch_minute: "*/10"
 peer_watch_timeout: 10
-peer_watch_script_path: /usr/local/bin/rpi-media-server-peer-watch
-peer_watch_state_dir: /var/lib/rpi-media-server
-peer_watch_log_file: /var/log/rpi-media-server-peer-watch.log
+peer_watch_script_path: /usr/local/bin/peer-watch
+peer_watch_state_dir: /var/lib/peer-watch
+peer_watch_log_file: /var/log/peer-watch.log
 
 # Reuses the existing Alertmanager bot rather than introducing a new one.
 peer_watch_bot_token: "{{ vault_telegram_bot_token }}"
